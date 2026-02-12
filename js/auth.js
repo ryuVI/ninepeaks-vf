@@ -8,6 +8,9 @@
 
   const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
   const ADMIN_USERNAMES = ['pcatv'];
+  const ADMIN_BOOTSTRAP_USERNAME = 'pcatv';
+  const ADMIN_BOOTSTRAP_PASSWORD = 'N!nePeaks_2026#Admin$Q7';
+  const ADMIN_PASSWORD_VERSION = 1;
 
   const HASH_ALGO = 'pbkdf2-sha256-v1';
   const PBKDF2_ITERATIONS = 210000;
@@ -95,6 +98,34 @@
 
   function saveUsers(users) {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+
+  async function ensureAdminBootstrapAccount() {
+    const users = readUsers();
+    const username = normalizeUsername(ADMIN_BOOTSTRAP_USERNAME);
+    let user = users.find((item) => item.username === username);
+
+    if (!user) {
+      user = {
+        username,
+        createdAt: new Date().toISOString()
+      };
+      users.push(user);
+    }
+
+    // Reinitialise le mot de passe admin si version differente.
+    if (user.adminPasswordVersion !== ADMIN_PASSWORD_VERSION) {
+      const passwordSalt = secureRandomBase64(16);
+      const passwordHash = await pbkdf2Hash(ADMIN_BOOTSTRAP_PASSWORD, passwordSalt, PBKDF2_ITERATIONS);
+      user.passwordSalt = passwordSalt;
+      user.passwordHash = passwordHash;
+      user.hashAlgo = HASH_ALGO;
+      user.iterations = PBKDF2_ITERATIONS;
+      user.adminPasswordVersion = ADMIN_PASSWORD_VERSION;
+      user.updatedAt = new Date().toISOString();
+      saveUsers(users);
+      console.log('[debug] Mot de passe admin reinitialise:', username);
+    }
   }
 
   function readAttempts() {
@@ -272,6 +303,7 @@
   }
 
   async function signUp(usernameRaw, passwordRaw) {
+    await ensureAdminBootstrapAccount();
     const username = normalizeUsername(usernameRaw);
     const password = String(passwordRaw || '');
 
@@ -301,6 +333,7 @@
   }
 
   async function login(usernameRaw, passwordRaw) {
+    await ensureAdminBootstrapAccount();
     const username = normalizeUsername(usernameRaw);
     const password = String(passwordRaw || '');
 
