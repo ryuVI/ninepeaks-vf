@@ -25,8 +25,7 @@
     </div>
     <div class="container reader-controls">
       <div class="mode-switch" role="group" aria-label="Mode de lecture">
-        <button id="mode-scroll" class="btn ghost active" type="button">Defilement</button>
-        <button id="mode-paged" class="btn ghost" type="button">Image par image</button>
+        <span class="zoom-pill">Mode: Defilement</span>
       </div>
       <div class="zoom-controls" role="group" aria-label="Zoom">
         <button id="zoom-out" class="btn ghost" type="button">-</button>
@@ -43,15 +42,6 @@
   <main class="reader-main" aria-live="polite">
     <section id="reader-state" class="container state-msg">Chargement du lecteur...</section>
     <section id="reader-pages" class="reader-pages" aria-label="Pages du chapitre"></section>
-    <section id="reader-single" class="reader-single hidden" aria-label="Page en cours">
-      <figure class="page-frame single-frame">
-        <img id="single-page-image" class="page-image" src="" alt="">
-      </figure>
-    </section>
-    <div id="paged-nav" class="paged-nav hidden" aria-label="Navigation image par image">
-      <button id="single-prev" class="btn ghost" type="button" aria-label="Image precedente">◀</button>
-      <button id="single-next" class="btn ghost" type="button" aria-label="Image suivante">▶</button>
-    </div>
 
     <section class="reader-comments card" aria-labelledby="comments-title">
       <div class="comments-head">

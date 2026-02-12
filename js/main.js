@@ -362,11 +362,10 @@ function parseReaderParams() {
   const params = new URLSearchParams(window.location.search);
   const chapter = Number.parseInt(params.get('chapter'), 10);
   const page = Number.parseInt(params.get('page'), 10);
-  const mode = params.get('mode');
   return {
     chapter: Number.isNaN(chapter) ? null : chapter,
     page: Number.isNaN(page) ? 1 : page,
-    mode: mode === 'paged' ? 'paged' : 'scroll'
+    mode: 'scroll'
   };
 }
 
@@ -548,21 +547,17 @@ function updateSinglePage(chapter) {
 }
 
 function setReaderMode(mode) {
-  currentMode = mode === 'paged' ? 'paged' : 'scroll';
+  currentMode = 'scroll';
   const scrollBtn = document.querySelector('#mode-scroll');
   const pagedBtn = document.querySelector('#mode-paged');
   const scrollContainer = document.querySelector('#reader-pages');
   const singleContainer = document.querySelector('#reader-single');
-  if (!scrollBtn || !pagedBtn || !scrollContainer || !singleContainer) return;
+  if (!scrollContainer) return;
 
-  scrollBtn.classList.toggle('active', currentMode === 'scroll');
-  pagedBtn.classList.toggle('active', currentMode === 'paged');
-  scrollContainer.classList.toggle('hidden', currentMode !== 'scroll');
-  singleContainer.classList.toggle('hidden', currentMode !== 'paged');
-
-  if (currentMode === 'paged' && activeChapter) {
-    updateSinglePage(activeChapter);
-  }
+  if (scrollBtn) scrollBtn.classList.add('active');
+  if (pagedBtn) pagedBtn.classList.remove('active');
+  scrollContainer.classList.remove('hidden');
+  if (singleContainer) singleContainer.classList.add('hidden');
   syncReaderHeaderVisibility();
   refreshPagedNav();
 }
@@ -640,10 +635,10 @@ function setupZoomControls() {
 function setupModeControls() {
   const scrollBtn = document.querySelector('#mode-scroll');
   const pagedBtn = document.querySelector('#mode-paged');
-  if (!scrollBtn || !pagedBtn) return;
+  if (!scrollBtn && !pagedBtn) return;
 
-  scrollBtn.addEventListener('click', () => setReaderMode('scroll'));
-  pagedBtn.addEventListener('click', () => setReaderMode('paged'));
+  scrollBtn?.addEventListener('click', () => setReaderMode('scroll'));
+  pagedBtn?.addEventListener('click', () => setReaderMode('scroll'));
 }
 
 function setupBookmarkButton() {
@@ -833,7 +828,6 @@ async function initReaderPage() {
     setReaderTitle(activeChapter);
     setupChapterButtons(chapters, chapterIndex);
     renderReaderPages(activeChapter);
-    updateSinglePage(activeChapter);
     setReaderMode(currentMode);
     setZoom(1);
     setupKeyboardNavigation();
