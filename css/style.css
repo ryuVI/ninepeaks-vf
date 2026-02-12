@@ -251,6 +251,35 @@ a {
   gap: 0.84rem;
 }
 
+.card-lite {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.chapter-menu {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.menu-label {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.menu-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #11111a;
+  color: var(--text-main);
+  border-radius: 8px;
+  padding: 0.56rem 0.68rem;
+  font: inherit;
+}
+
 .chapter-card {
   position: relative;
   display: grid;
@@ -523,6 +552,11 @@ a {
   background: rgba(255, 0, 122, 0.24);
 }
 
+.btn.danger {
+  border-color: rgba(255, 95, 115, 0.5);
+  background: rgba(255, 95, 115, 0.14);
+}
+
 .btn:disabled {
   opacity: 0.52;
   cursor: not-allowed;
@@ -638,6 +672,33 @@ a {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
 }
 
+.chapter-manager-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.chapter-manager-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.chapter-manager-item p {
+  margin: 0.18rem 0 0;
+}
+
+.chapter-manager-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .admin-box h3 {
   margin: 0 0 0.62rem;
   font-family: 'Space Grotesk', sans-serif;
@@ -698,6 +759,11 @@ a {
 
   .chapter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chapter-menu {
+    grid-template-columns: 170px 1fr auto;
+    align-items: center;
   }
 
   .reader-topbar {

@@ -106,6 +106,14 @@
           </article>
 
           <article class="admin-box">
+            <h3>Actions globales</h3>
+            <p class="muted">Les changements sont sauvegardes automatiquement sur le site.</p>
+            <div class="admin-actions">
+              <button id="reset-data" class="btn ghost" type="button">Revenir aux donnees de base</button>
+            </div>
+          </article>
+
+          <article class="admin-box">
             <h3>Aide images</h3>
             <p class="muted">Convention: <code>01.jpg</code>, <code>02.jpg</code>, ... dans <code>mangas/nine-peaks/chapter-XX/</code>.</p>
             <p class="muted">Cover manga: <code>mangas/nine-peaks/cover.jpg</code></p>
@@ -114,14 +122,9 @@
         </aside>
 
         <section class="admin-editor-pane">
-          <label for="json-editor" class="editor-label">data/chapters.json</label>
-          <textarea id="json-editor" class="json-editor" spellcheck="false"></textarea>
-
-          <div class="admin-actions">
-            <button id="save-json" class="btn primary" type="button">Sauvegarder (local)</button>
-            <button id="reset-json" class="btn ghost" type="button">Annuler override</button>
-            <button id="download-json" class="btn ghost" type="button">Telecharger JSON</button>
-          </div>
+          <h3>Menu chapitres</h3>
+          <p class="muted">Gestion intuitive des chapitres: clique pour pre-remplir, supprime en un clic.</p>
+          <div id="chapter-manager-list" class="chapter-manager-list"></div>
         </section>
       </div>
     </section>

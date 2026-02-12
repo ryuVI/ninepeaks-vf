@@ -16,6 +16,8 @@ Site statique de lecture manga (GitHub Pages).
 - Connexion / inscription locale
 - Panel admin (compte `pcatv`)
 - Upload direct des images chapitre depuis le panel admin (Chrome/Edge)
+- Gestion des chapitres 100% via interface (ajout / edition / suppression)
+- Menu chapitres avec acces rapide depuis l'accueil
 
 ## Upload direct depuis le panel admin
 
@@ -33,6 +35,10 @@ Le panel va:
 - creer/mettre a jour `mangas/nine-peaks/chapter-XX/01.jpg`, `02.jpg`, ...
 - creer/mettre a jour `cover.jpg` avec la premiere image
 - mettre a jour `data/chapters.json` automatiquement
+
+Tu n'as plus besoin d'editer `chapters.json` a la main:
+- ajoute/modifie/supprime les chapitres depuis le panel admin
+- les donnees sont sauvegardees automatiquement pour le site
 
 ## Lancer en local
 

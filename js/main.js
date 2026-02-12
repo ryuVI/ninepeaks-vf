@@ -1,6 +1,7 @@
 // Point d'entree principal pour index.html et reader.html
 const DATA_PATH = './data/chapters.json';
 const DATA_OVERRIDE_KEY = 'nine_peaks_data_override';
+const SITE_DATA_KEY = 'nine_peaks_site_data';
 
 let chaptersCache = [];
 let activeChapter = null;
@@ -10,6 +11,19 @@ let currentMode = 'scroll';
 let headerLastY = 0;
 
 function getLocalDataOverride() {
+  try {
+    const siteRaw = localStorage.getItem(SITE_DATA_KEY);
+    if (siteRaw) {
+      const siteParsed = JSON.parse(siteRaw);
+      if (siteParsed && Array.isArray(siteParsed.chapters)) {
+        console.log('[debug] Donnees site locales detectees');
+        return siteParsed;
+      }
+    }
+  } catch (error) {
+    console.log('[debug] Donnees site locales invalides:', error);
+  }
+
   try {
     const raw = localStorage.getItem(DATA_OVERRIDE_KEY);
     if (!raw) return null;
@@ -249,6 +263,29 @@ function renderChapterList(chapters) {
     .forEach((chapter) => {
       listEl.appendChild(createChapterCard(chapter));
     });
+}
+
+function renderChapterMenu(chapters) {
+  const selectEl = document.querySelector('#chapter-jump');
+  const openBtn = document.querySelector('#chapter-jump-btn');
+  if (!selectEl || !openBtn) return;
+
+  selectEl.innerHTML = '<option value="">Choisir un chapitre...</option>';
+  chapters
+    .slice()
+    .sort((a, b) => b.number - a.number)
+    .forEach((chapter) => {
+      const option = document.createElement('option');
+      option.value = String(chapter.number);
+      option.textContent = `Chapitre ${chapter.number} - ${safeText(chapter.title, 'Sans titre')}`;
+      selectEl.appendChild(option);
+    });
+
+  openBtn.addEventListener('click', () => {
+    const selectedNumber = Number.parseInt(selectEl.value, 10);
+    if (Number.isNaN(selectedNumber)) return;
+    window.location.href = chapterLink(selectedNumber);
+  });
 }
 
 function showIndexError(message) {
@@ -565,6 +602,7 @@ async function initIndexPage() {
     renderUserActions();
     renderMangaInfo(data.manga || {});
     renderChapterList(chaptersCache);
+    renderChapterMenu(chaptersCache);
     renderBookmarks(chaptersCache);
   } catch (error) {
     console.error('[debug] Erreur index:', error);

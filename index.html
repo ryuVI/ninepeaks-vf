@@ -45,6 +45,13 @@
       <div class="section-head">
         <h2 id="chapters-heading">Chapitres</h2>
       </div>
+      <div class="chapter-menu card-lite" aria-label="Menu rapide chapitres">
+        <label for="chapter-jump" class="menu-label">Acces rapide</label>
+        <select id="chapter-jump" class="menu-select">
+          <option value="">Choisir un chapitre...</option>
+        </select>
+        <button id="chapter-jump-btn" class="btn ghost" type="button">Ouvrir</button>
+      </div>
       <div id="chapter-list" class="chapter-grid" role="list"></div>
       <p id="chapter-empty" class="state-msg hidden" aria-live="polite">Aucun chapitre disponible pour le moment.</p>
       <p id="chapter-error" class="state-msg error hidden" aria-live="assertive"></p>
