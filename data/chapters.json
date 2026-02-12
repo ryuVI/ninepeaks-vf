@@ -1,0 +1,31 @@
+﻿{
+  "manga": {
+    "title": "Nine Peaks",
+    "cover": "mangas/nine-peaks/cover.jpg",
+    "synopsis": "Gaku, un lyceen en conflit avec son pere, est projete dans le passe et doit survivre dans un environnement violent pour proteger sa famille.",
+    "genres": ["Action", "Aventure", "Fantasy"]
+  },
+  "chapters": [
+    {
+      "number": 25,
+      "title": "Le premier pas",
+      "date": "2026-02-10",
+      "pages": 45,
+      "folder": "chapter-25"
+    },
+    {
+      "number": 26,
+      "title": "Le pacte de sang",
+      "date": "2026-02-11",
+      "pages": 42,
+      "folder": "chapter-26"
+    },
+    {
+      "number": 27,
+      "title": "Dans la tempete",
+      "date": "2026-02-12",
+      "pages": 40,
+      "folder": "chapter-27"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nine Peaks VF - Lecture manga en ligne en mode sombre.">
+  <title>Nine Peaks VF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="index">
+  <header class="site-header fixed" aria-label="En-tete principal">
+    <div class="container header-content">
+      <h1 class="brand-title">Nine Peaks VF</h1>
+    </div>
+  </header>
+
+  <main class="container home-main">
+    <section id="manga-info" class="manga-info card" aria-labelledby="manga-title">
+      <div class="cover-wrap">
+        <img id="manga-cover" src="" alt="Couverture du manga Nine Peaks" loading="lazy">
+      </div>
+      <div class="manga-meta">
+        <h2 id="manga-title">Chargement...</h2>
+        <p id="manga-synopsis">Chargement des informations du manga...</p>
+        <div id="manga-tags" class="tag-list" aria-label="Genres du manga"></div>
+      </div>
+    </section>
+
+    <section class="chapter-section" aria-labelledby="chapters-heading">
+      <div class="section-head">
+        <h2 id="chapters-heading">Chapitres</h2>
+      </div>
+      <div id="chapter-list" class="chapter-grid" role="list"></div>
+      <p id="chapter-empty" class="state-msg hidden" aria-live="polite">Aucun chapitre disponible pour le moment.</p>
+      <p id="chapter-error" class="state-msg error hidden" aria-live="assertive"></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Nine Peaks VF. Projet fan sans but commercial.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>

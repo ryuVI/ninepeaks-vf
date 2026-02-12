@@ -1,0 +1,40 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Lecteur Nine Peaks VF en scroll vertical.">
+  <title>Lecteur - Nine Peaks VF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="reader">
+  <header id="reader-header" class="site-header reader-header" aria-label="Navigation du lecteur">
+    <div class="container reader-topbar">
+      <a class="btn ghost" href="index.html" aria-label="Retour a la liste des chapitres">Retour</a>
+      <div class="reader-title-wrap">
+        <h1 id="reader-title">Chargement du chapitre...</h1>
+        <p id="page-counter">Page 0 / 0</p>
+      </div>
+      <div class="chapter-nav-inline">
+        <button id="prev-chapter" class="btn ghost" type="button">Chapitre precedent</button>
+        <button id="next-chapter" class="btn ghost" type="button">Chapitre suivant</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="reader-main" aria-live="polite">
+    <section id="reader-state" class="container state-msg">Chargement du lecteur...</section>
+    <section id="reader-pages" class="reader-pages" aria-label="Pages du chapitre"></section>
+  </main>
+
+  <div class="floating-nav" aria-label="Navigation rapide">
+    <button id="page-up" class="btn primary" type="button">Page precedente</button>
+    <button id="page-down" class="btn primary" type="button">Page suivante</button>
+  </div>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>

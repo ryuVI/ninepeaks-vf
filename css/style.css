@@ -1,0 +1,340 @@
+﻿:root {
+  --bg-dark: #0a0a0a;
+  --bg-card: #1a1a1a;
+  --accent: #3b82f6;
+  --text-main: #f2f2f2;
+  --text-soft: #b8b8b8;
+  --border: #2a2a2a;
+  --radius: 12px;
+  --shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  --transition: 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(circle at top, #151a22 0%, var(--bg-dark) 40%), var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'IBM Plex Sans', Arial, sans-serif;
+  min-height: 100%;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  width: min(1080px, 92vw);
+  margin-inline: auto;
+}
+
+.site-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 10, 10, 0.82);
+  backdrop-filter: blur(10px);
+  z-index: 30;
+}
+
+.site-header.fixed {
+  position: sticky;
+  top: 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+}
+
+.brand-title {
+  margin: 0;
+  letter-spacing: 0.04em;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-family: 'Space Grotesk', sans-serif;
+  background: linear-gradient(120deg, #7ab0ff, #3b82f6 45%, #93c5fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.home-main {
+  padding: 1.2rem 0 5.5rem;
+}
+
+.card {
+  background: linear-gradient(180deg, #1f1f1f 0%, var(--bg-card) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.manga-info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.cover-wrap {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #121212;
+  border: 1px solid var(--border);
+}
+
+#manga-cover {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.manga-meta h2 {
+  margin-top: 0;
+  margin-bottom: 0.65rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.3rem, 3vw, 1.9rem);
+}
+
+.manga-meta p {
+  margin-top: 0;
+  margin-bottom: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.tag {
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #d7e8ff;
+  background: rgba(59, 130, 246, 0.16);
+  border-radius: 999px;
+  padding: 0.28rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.chapter-section {
+  margin-top: 1.3rem;
+}
+
+.section-head {
+  margin-bottom: 0.85rem;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.chapter-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+}
+
+.chapter-card {
+  background: linear-gradient(180deg, #1c1c1c, #171717);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.chapter-card:hover,
+.chapter-card:focus-within {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.45);
+  border-color: rgba(59, 130, 246, 0.55);
+}
+
+.chapter-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.chapter-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.link-accent {
+  color: #8abaff;
+}
+
+.site-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 1rem 0;
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.reader-header {
+  position: sticky;
+  top: 0;
+  transition: transform var(--transition), opacity var(--transition);
+}
+
+.reader-header.collapsed {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.reader-topbar {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.7rem 0;
+}
+
+.reader-title-wrap {
+  text-align: center;
+}
+
+.reader-title-wrap h1 {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.05rem, 2.8vw, 1.4rem);
+}
+
+.reader-title-wrap p {
+  margin: 0.25rem 0 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.chapter-nav-inline {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.reader-main {
+  padding-bottom: 7rem;
+}
+
+.reader-pages {
+  display: grid;
+  gap: 0.75rem;
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.page-frame {
+  margin: 0;
+  background: #101010;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.page-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: #0d0d0d;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  color: var(--text-main);
+  cursor: pointer;
+  font: inherit;
+  transition: transform var(--transition), background var(--transition), border-color var(--transition);
+}
+
+.btn:hover,
+.btn:focus-visible {
+  transform: translateY(-1px);
+}
+
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #2f73dc, var(--accent));
+  border-color: rgba(114, 168, 255, 0.6);
+  color: #fff;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.floating-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.7rem;
+  z-index: 25;
+}
+
+.state-msg {
+  color: var(--text-soft);
+  text-align: center;
+  padding: 1rem;
+}
+
+.state-msg.error {
+  color: #ff8e8e;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (min-width: 700px) {
+  .manga-info {
+    grid-template-columns: 260px 1fr;
+    gap: 1.1rem;
+    padding: 1.1rem;
+  }
+
+  .chapter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reader-topbar {
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+  }
+
+  .reader-title-wrap {
+    text-align: left;
+  }
+}
+
+@media (min-width: 980px) {
+  .chapter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
