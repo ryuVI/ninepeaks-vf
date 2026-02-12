@@ -169,10 +169,7 @@ function renderChapterManagerList() {
   listEl.querySelectorAll('button[data-action="edit"]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const number = Number.parseInt(btn.dataset.number, 10);
-      const chapter = currentData.chapters.find((item) => item.number === number);
-      if (!chapter) return;
-      prefillChapterFormFromRecord(chapter);
-      showMessage('#admin-message', `Chapitre ${number} charge dans le formulaire.`);
+      window.location.href = `chapter-editor.html?chapter=${number}`;
     });
   });
 

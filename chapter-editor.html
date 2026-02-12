@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Edition des pages de chapitre Nine Peaks VF">
+  <title>Edition Chapitre - Nine Peaks VF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="chapter-editor">
+  <header class="site-header fixed" aria-label="En-tete edition chapitre">
+    <div class="container header-content split-header">
+      <h1 class="brand-title">Edition Chapitre</h1>
+      <div class="header-actions">
+        <a class="btn ghost" href="admin.html">Retour Admin</a>
+        <a id="open-reader-link" class="btn ghost" href="#">Visualiser</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container admin-main">
+    <section class="card admin-card">
+      <div class="admin-head">
+        <h2 id="editor-title">Chargement du chapitre...</h2>
+        <p id="editor-meta" class="muted"></p>
+      </div>
+      <p id="editor-message" class="state-msg hidden" aria-live="polite"></p>
+
+      <div class="admin-layout">
+        <aside class="admin-side">
+          <article class="admin-box">
+            <h3>Connexion dossier projet</h3>
+            <p class="muted">Necessaire pour ajouter/supprimer physiquement les images.</p>
+            <div class="admin-actions">
+              <button id="editor-select-folder" class="btn ghost" type="button">Choisir dossier projet</button>
+            </div>
+            <p id="editor-folder-status" class="muted">Aucun dossier selectionne.</p>
+          </article>
+
+          <article class="admin-box">
+            <h3>Ajouter une page</h3>
+            <div class="admin-grid">
+              <label for="editor-add-page-number">Numero page (optionnel)</label>
+              <input id="editor-add-page-number" type="number" min="1" step="1" placeholder="vide = fin du chapitre">
+
+              <label for="editor-add-file">Image (jpg/jpeg)</label>
+              <input id="editor-add-file" type="file" accept=".jpg,.jpeg,image/jpeg">
+            </div>
+            <div class="admin-actions">
+              <button id="editor-add-page-btn" class="btn primary" type="button">Ajouter page</button>
+            </div>
+          </article>
+
+          <article class="admin-box">
+            <h3>Supprimer une page</h3>
+            <div class="admin-grid">
+              <label for="editor-remove-page-number">Numero page</label>
+              <input id="editor-remove-page-number" type="number" min="1" step="1" placeholder="ex: 5">
+            </div>
+            <div class="admin-actions">
+              <button id="editor-remove-page-btn" class="btn ghost danger" type="button">Supprimer page</button>
+            </div>
+          </article>
+        </aside>
+
+        <section class="admin-editor-pane">
+          <h3>Visualisation des pages</h3>
+          <p class="muted">Tu peux aussi supprimer directement une page depuis sa carte.</p>
+          <div id="editor-pages-list" class="editor-pages-list"></div>
+          <p id="editor-pages-empty" class="state-msg hidden">Aucune page dans ce chapitre.</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/auth.js" defer></script>
+  <script src="js/chapter-editor.js" defer></script>
+</body>
+</html>
