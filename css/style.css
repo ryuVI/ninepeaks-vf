@@ -72,9 +72,9 @@ a {
 }
 
 .user-pill {
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  background: rgba(59, 130, 246, 0.12);
-  color: #d2e6ff;
+  border: 1px solid #c9a321;
+  background: linear-gradient(180deg, #ffd54f 0%, #f6c945 100%);
+  color: #ffffff;
   border-radius: 999px;
   padding: 0.4rem 0.75rem;
   font-size: 0.86rem;
