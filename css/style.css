@@ -8,6 +8,7 @@
   --radius: 12px;
   --shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
   --transition: 0.3s ease;
+  --reader-zoom: 1;
 }
 
 * {
@@ -70,6 +71,15 @@ a {
   justify-content: flex-end;
 }
 
+.user-pill {
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.12);
+  color: #d2e6ff;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.86rem;
+}
+
 .brand-title {
   margin: 0;
   letter-spacing: 0.04em;
@@ -108,8 +118,9 @@ a {
 
 #manga-cover {
   width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
+  aspect-ratio: 500 / 349;
+  object-fit: contain;
+  background: #0d0d0d;
 }
 
 .manga-meta h2 {
@@ -143,6 +154,24 @@ a {
 
 .chapter-section {
   margin-top: 1.3rem;
+}
+
+.bookmark-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+}
+
+.bookmark-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
 }
 
 .section-head {
@@ -237,6 +266,32 @@ a {
   padding: 0.7rem 0;
 }
 
+.reader-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+  padding-bottom: 0.75rem;
+}
+
+.mode-switch,
+.zoom-controls,
+.reader-account {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.zoom-pill {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  min-width: 62px;
+  text-align: center;
+  font-size: 0.88rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .reader-title-wrap {
   text-align: center;
 }
@@ -271,6 +326,15 @@ a {
   margin: 0 auto;
 }
 
+.reader-single {
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.single-frame {
+  margin-top: 0.75rem;
+}
+
 .page-frame {
   margin: 0;
   background: #101010;
@@ -280,10 +344,11 @@ a {
 }
 
 .page-image {
-  width: 100%;
+  width: calc(100% * var(--reader-zoom));
   height: auto;
   object-fit: contain;
   background: #0d0d0d;
+  margin: 0 auto;
 }
 
 .btn {
@@ -303,6 +368,11 @@ a {
 
 .btn.ghost {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.btn.active {
+  border-color: rgba(59, 130, 246, 0.65);
+  background: rgba(59, 130, 246, 0.18);
 }
 
 .btn.primary {
@@ -349,6 +419,16 @@ a {
 .auth-card,
 .admin-card {
   padding: 1rem;
+}
+
+.auth-layout h2 {
+  margin-top: 0;
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
 }
 
 .auth-form {
@@ -416,6 +496,19 @@ a {
 
   .reader-title-wrap {
     text-align: left;
+  }
+
+  .reader-controls {
+    grid-template-columns: auto auto 1fr;
+    align-items: center;
+  }
+
+  .reader-account {
+    justify-content: flex-end;
+  }
+
+  .auth-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .auth-card,

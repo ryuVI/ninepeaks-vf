@@ -2,33 +2,45 @@
 
 Site statique de lecture manga compatible GitHub Pages.
 
+## Fonctionnalites
+
+- Lecture en deux modes:
+  - `Defilement` (toutes les pages)
+  - `Image par image`
+- Zoom lecteur (`-`, `Reset`, `+`)
+- Bookmarks propres par utilisateur (chapitre + page + mode)
+- Authentification locale:
+  - Connexion
+  - Inscription
+- Compte admin uniquement pour `pcatv`
+
 ## Structure
 
-- `index.html` : page d'accueil avec infos manga et liste des chapitres
-- `reader.html` : lecteur vertical avec navigation clavier et boutons
-- `login.html` : connexion admin
-- `admin.html` : panel admin (edition JSON locale)
-- `css/style.css` : theme sombre moderne et responsive
-- `js/main.js` : logique lecteur + rendu chapitres
-- `js/auth.js` : authentification client
-- `js/admin.js` : gestion login/panel admin
-- `data/chapters.json` : donnees du manga et des chapitres
-- `mangas/nine-peaks/chapter-XX/` : images (01.jpg, 02.jpg, ...)
+- `index.html` : accueil + chapitres + bookmarks
+- `reader.html` : lecteur manga
+- `login.html` : connexion / inscription
+- `admin.html` : panel admin (reserve compte admin)
+- `css/style.css` : styles
+- `js/auth.js` : auth locale et roles
+- `js/account.js` : logique page login/inscription
+- `js/main.js` : rendu accueil + lecteur + bookmarks
+- `js/admin.js` : panel admin
+- `data/chapters.json` : donnees manga/chapitres
 
-## Connexion admin
+## Authentification
 
-- URL: `login.html`
-- Identifiant: `pcatv`
-- Mot de passe initial: `NinePeaks2026!`
+- Tous les utilisateurs peuvent s'inscrire puis se connecter.
+- Le compte `pcatv` est reconnu admin.
+- Les sessions et comptes sont stockes en `localStorage` (navigateur).
 
-Important: comme le site est 100% statique, cette protection est cote navigateur (pas un vrai backend securise).
+Important: sans backend, ce n'est pas une securite serveur forte.
 
-## Ajouter un nouveau chapitre
+## Ajouter un chapitre
 
-1. Cree un dossier: `mangas/nine-peaks/chapter-28/`
-2. Ajoute une couverture: `mangas/nine-peaks/chapter-28/cover.jpg`
-3. Ajoute les pages nommees en 2 chiffres: `01.jpg`, `02.jpg`, etc.
-4. Ouvre `data/chapters.json` et ajoute un objet dans `chapters`:
+1. Dossier: `mangas/nine-peaks/chapter-28/`
+2. Couverture chapitre: `cover.jpg`
+3. Pages: `01.jpg`, `02.jpg`, etc.
+4. Ajouter dans `data/chapters.json`:
 
 ```json
 {
@@ -41,26 +53,15 @@ Important: comme le site est 100% statique, cette protection est cote navigateur
 }
 ```
 
-5. Verifie que `pages` correspond au nombre exact d'images.
+## Test local
 
-## Modifier les infos du manga
+```powershell
+cd c:\webtst\webtst
+py -m http.server 5500
+```
 
-Deux options:
+Puis ouvrir:
 
-1. Edition permanente: modifier `data/chapters.json` puis commit/push.
-2. Edition rapide locale: `admin.html` -> modifier JSON -> sauvegarder (stockage local navigateur).
-
-## Deployer sur GitHub Pages
-
-1. Push le projet sur GitHub.
-2. Dans GitHub: `Settings` > `Pages`.
-3. Source: `Deploy from a branch`.
-4. Choisis `main` et dossier `/ (root)` puis `Save`.
-5. Attends le build puis ouvre l'URL GitHub Pages.
-
-## Debug rapide
-
-- Ouvre la console navigateur pour les logs `[debug]`.
-- Si un chapitre ne charge pas, verifie `reader.html?chapter=XX`.
-- Si une image manque, un placeholder s'affiche automatiquement.
-- Si le panel admin est vide, verifie que `data/chapters.json` est accessible via serveur HTTP local.
+- `http://localhost:5500/index.html`
+- `http://localhost:5500/login.html`
+- `http://localhost:5500/reader.html?chapter=25`

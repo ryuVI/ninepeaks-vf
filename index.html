@@ -14,9 +14,8 @@
   <header class="site-header fixed" aria-label="En-tete principal">
     <div class="container header-content split-header">
       <h1 class="brand-title">Nine Peaks VF</h1>
-      <nav class="header-actions" aria-label="Actions rapides">
-        <a class="btn ghost" href="login.html">Login Admin</a>
-        <a class="btn ghost" href="admin.html">Panel Admin</a>
+      <nav id="user-actions" class="header-actions" aria-label="Actions utilisateur">
+        <a class="btn ghost" href="login.html">Connexion / Inscription</a>
       </nav>
     </div>
   </header>
@@ -41,6 +40,14 @@
       <p id="chapter-empty" class="state-msg hidden" aria-live="polite">Aucun chapitre disponible pour le moment.</p>
       <p id="chapter-error" class="state-msg error hidden" aria-live="assertive"></p>
     </section>
+
+    <section class="chapter-section" aria-labelledby="bookmarks-heading">
+      <div class="section-head">
+        <h2 id="bookmarks-heading">Mes bookmarks</h2>
+      </div>
+      <div id="bookmark-list" class="bookmark-list"></div>
+      <p id="bookmark-empty" class="state-msg">Connecte-toi pour sauvegarder tes pages favorites.</p>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -49,6 +56,7 @@
     </div>
   </footer>
 
+  <script src="js/auth.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 </html>

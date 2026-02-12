@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Connexion admin Nine Peaks VF">
-  <title>Login Admin - Nine Peaks VF</title>
+  <meta name="description" content="Connexion et inscription Nine Peaks VF">
+  <title>Connexion - Nine Peaks VF</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -19,25 +19,39 @@
   </header>
 
   <main class="container auth-main">
-    <section class="card auth-card" aria-labelledby="login-title">
-      <h2 id="login-title">Connexion admin</h2>
-      <p class="muted">Reserve a l'administration du site.</p>
+    <section class="card auth-card auth-layout" aria-labelledby="auth-title">
+      <h2 id="auth-title">Compte utilisateur</h2>
+      <p class="muted">Connecte-toi pour garder tes bookmarks. Ton compte peut aussi avoir des droits admin.</p>
 
-      <form id="login-form" class="auth-form" novalidate>
-        <label for="admin-username">Nom utilisateur</label>
-        <input id="admin-username" name="username" type="text" autocomplete="username" required>
+      <div class="auth-grid">
+        <form id="login-form" class="auth-form" novalidate>
+          <h3>Connexion</h3>
+          <label for="login-username">Nom utilisateur</label>
+          <input id="login-username" name="username" type="text" autocomplete="username" required>
 
-        <label for="admin-password">Mot de passe</label>
-        <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+          <label for="login-password">Mot de passe</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" required>
 
-        <button class="btn primary" type="submit">Se connecter</button>
-      </form>
+          <button class="btn primary" type="submit">Se connecter</button>
+        </form>
 
-      <p id="login-message" class="state-msg hidden" aria-live="polite"></p>
+        <form id="signup-form" class="auth-form" novalidate>
+          <h3>Inscription</h3>
+          <label for="signup-username">Nom utilisateur</label>
+          <input id="signup-username" name="username" type="text" autocomplete="username" required>
+
+          <label for="signup-password">Mot de passe</label>
+          <input id="signup-password" name="password" type="password" autocomplete="new-password" required>
+
+          <button class="btn ghost" type="submit">Creer un compte</button>
+        </form>
+      </div>
+
+      <p id="auth-message" class="state-msg hidden" aria-live="polite"></p>
     </section>
   </main>
 
   <script src="js/auth.js" defer></script>
-  <script src="js/admin.js" defer></script>
+  <script src="js/account.js" defer></script>
 </body>
 </html>

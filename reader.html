@@ -23,11 +23,32 @@
         <button id="next-chapter" class="btn ghost" type="button">Chapitre suivant</button>
       </div>
     </div>
+    <div class="container reader-controls">
+      <div class="mode-switch" role="group" aria-label="Mode de lecture">
+        <button id="mode-scroll" class="btn ghost active" type="button">Defilement</button>
+        <button id="mode-paged" class="btn ghost" type="button">Image par image</button>
+      </div>
+      <div class="zoom-controls" role="group" aria-label="Zoom">
+        <button id="zoom-out" class="btn ghost" type="button">-</button>
+        <span id="zoom-level" class="zoom-pill">100%</span>
+        <button id="zoom-reset" class="btn ghost" type="button">Reset</button>
+        <button id="zoom-in" class="btn ghost" type="button">+</button>
+      </div>
+      <div class="reader-account">
+        <button id="bookmark-toggle" class="btn primary" type="button">Ajouter bookmark</button>
+        <span id="reader-user" class="muted"></span>
+      </div>
+    </div>
   </header>
 
   <main class="reader-main" aria-live="polite">
     <section id="reader-state" class="container state-msg">Chargement du lecteur...</section>
     <section id="reader-pages" class="reader-pages" aria-label="Pages du chapitre"></section>
+    <section id="reader-single" class="reader-single hidden" aria-label="Page en cours">
+      <figure class="page-frame single-frame">
+        <img id="single-page-image" class="page-image" src="" alt="">
+      </figure>
+    </section>
   </main>
 
   <div class="floating-nav" aria-label="Navigation rapide">
@@ -35,6 +56,7 @@
     <button id="page-down" class="btn primary" type="button">Page suivante</button>
   </div>
 
+  <script src="js/auth.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 </html>

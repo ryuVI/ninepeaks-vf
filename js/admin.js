@@ -17,11 +17,6 @@ function parseJsonOrNull(raw) {
   }
 }
 
-function getRedirectTarget() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('redirect') || 'admin.html';
-}
-
 async function loadBaseData() {
   const response = await fetch(DATA_PATH, { cache: 'no-store' });
   if (!response.ok) {
@@ -58,33 +53,6 @@ function downloadJson(filename, content) {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-}
-
-async function initLoginPage() {
-  const form = document.querySelector('#login-form');
-  if (!form) return;
-
-  if (window.Auth && window.Auth.isLoggedIn()) {
-    window.location.href = getRedirectTarget();
-    return;
-  }
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData(form);
-    const username = String(formData.get('username') || '');
-    const password = String(formData.get('password') || '');
-
-    console.log('[debug] Tentative login admin');
-    const ok = await window.Auth.login(username, password);
-    if (!ok) {
-      showMessage('#login-message', 'Identifiants invalides.', true);
-      return;
-    }
-
-    showMessage('#login-message', 'Connexion reussie, redirection...');
-    window.location.href = getRedirectTarget();
-  });
 }
 
 async function initAdminPage() {
@@ -148,9 +116,6 @@ async function initAdminPage() {
 
 function initAdminFeatures() {
   const page = document.body.dataset.page;
-  if (page === 'login') {
-    initLoginPage();
-  }
   if (page === 'admin') {
     initAdminPage();
   }
