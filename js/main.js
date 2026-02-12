@@ -2,6 +2,7 @@
 const DATA_PATH = './data/chapters.json';
 const DATA_OVERRIDE_KEY = 'nine_peaks_data_override';
 const SITE_DATA_KEY = 'nine_peaks_site_data';
+const COMMENTS_KEY = 'nine_peaks_comments';
 
 let chaptersCache = [];
 let activeChapter = null;
@@ -10,6 +11,33 @@ let currentZoom = 1;
 let currentMode = 'scroll';
 let headerLastY = 0;
 let forceHideUi = false;
+
+function readCommentsStore() {
+  try {
+    const raw = localStorage.getItem(COMMENTS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCommentsStore(store) {
+  localStorage.setItem(COMMENTS_KEY, JSON.stringify(store));
+}
+
+function getChapterComments(chapterNumber) {
+  const store = readCommentsStore();
+  const list = store[String(chapterNumber)];
+  return Array.isArray(list) ? list : [];
+}
+
+function setChapterComments(chapterNumber, comments) {
+  const store = readCommentsStore();
+  store[String(chapterNumber)] = comments;
+  saveCommentsStore(store);
+}
 
 function getLocalDataOverride() {
   try {
@@ -357,6 +385,101 @@ function setupUiVisibilityToggle() {
   });
 }
 
+function formatCommentDate(isoDate) {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate || '';
+  return date.toLocaleString('fr-FR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function renderComments(chapterNumber) {
+  const listEl = document.querySelector('#comments-list');
+  const emptyEl = document.querySelector('#comments-empty');
+  const countEl = document.querySelector('#comments-count');
+  if (!listEl || !emptyEl || !countEl) return;
+
+  const user = getCurrentUserSafe();
+  const comments = getChapterComments(chapterNumber).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  countEl.textContent = `${comments.length} commentaire${comments.length > 1 ? 's' : ''}`;
+  if (!comments.length) {
+    listEl.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+
+  emptyEl.classList.add('hidden');
+  listEl.innerHTML = '';
+
+  comments.forEach((comment) => {
+    const item = document.createElement('article');
+    item.className = 'comment-item';
+
+    const canDelete = user && user.username === comment.author;
+    item.innerHTML = `
+      <div class="comment-meta">
+        <strong>${comment.author}</strong>
+        <span>${formatCommentDate(comment.createdAt)}</span>
+      </div>
+      <p class="comment-content">${comment.content}</p>
+      ${canDelete ? `<div class="comment-actions"><button class="btn ghost" data-delete-comment="${comment.id}" type="button">Supprimer</button></div>` : ''}
+    `;
+    listEl.appendChild(item);
+  });
+
+  listEl.querySelectorAll('button[data-delete-comment]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.deleteComment;
+      const next = getChapterComments(chapterNumber).filter((comment) => comment.id !== id);
+      setChapterComments(chapterNumber, next);
+      renderComments(chapterNumber);
+    });
+  });
+}
+
+function setupComments(chapterNumber) {
+  const formEl = document.querySelector('#comment-form');
+  const inputEl = document.querySelector('#comment-input');
+  const submitEl = document.querySelector('#comment-submit');
+  const userEl = document.querySelector('#comment-user');
+  if (!formEl || !inputEl || !submitEl || !userEl) return;
+
+  const user = getCurrentUserSafe();
+  if (!user) {
+    submitEl.disabled = true;
+    userEl.textContent = 'Connecte-toi pour commenter';
+    renderComments(chapterNumber);
+    return;
+  }
+
+  userEl.textContent = `Connecte: ${user.username}`;
+  submitEl.disabled = false;
+  renderComments(chapterNumber);
+
+  formEl.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const content = String(inputEl.value || '').trim();
+    if (!content) return;
+    if (content.length > 800) return;
+
+    const next = getChapterComments(chapterNumber);
+    next.push({
+      id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      author: user.username,
+      content,
+      createdAt: new Date().toISOString()
+    });
+    setChapterComments(chapterNumber, next);
+    inputEl.value = '';
+    renderComments(chapterNumber);
+  });
+}
+
 function scrollByViewport(direction) {
   const delta = Math.round(window.innerHeight * 0.9);
   window.scrollBy({
@@ -675,6 +798,7 @@ async function initReaderPage() {
     setupZoomControls();
     setupModeControls();
     setupBookmarkButton();
+    setupComments(activeChapter.number);
     setupUiVisibilityToggle();
     enableHeaderCollapse();
     hideReaderState();

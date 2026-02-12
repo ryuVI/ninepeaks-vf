@@ -13,6 +13,7 @@ Site statique de lecture manga (GitHub Pages).
 - Lecture en mode defilement ou image par image
 - Zoom lecteur
 - Bookmarks par utilisateur
+- Commentaires par chapitre (stockage local)
 - Connexion / inscription locale
 - Auth renforcee (PBKDF2 + sel, lock anti brute-force, migration anciens comptes)
 - Panel admin (compte `pcatv`)

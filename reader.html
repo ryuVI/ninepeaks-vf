@@ -48,6 +48,22 @@
         <img id="single-page-image" class="page-image" src="" alt="">
       </figure>
     </section>
+
+    <section class="reader-comments card" aria-labelledby="comments-title">
+      <div class="comments-head">
+        <h2 id="comments-title">Commentaires</h2>
+        <span id="comments-count" class="muted">0 commentaire</span>
+      </div>
+      <form id="comment-form" class="comment-form" novalidate>
+        <textarea id="comment-input" class="input-textarea" placeholder="Ecris ton commentaire..." maxlength="800"></textarea>
+        <div class="comment-actions">
+          <button id="comment-submit" class="btn primary" type="submit">Publier</button>
+          <span id="comment-user" class="muted">Connecte-toi pour commenter</span>
+        </div>
+      </form>
+      <div id="comments-list" class="comments-list"></div>
+      <p id="comments-empty" class="state-msg">Aucun commentaire pour ce chapitre.</p>
+    </section>
   </main>
 
   <div class="floating-nav" aria-label="Navigation rapide">
