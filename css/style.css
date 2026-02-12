@@ -173,6 +173,34 @@ a {
   line-height: 1.6;
 }
 
+.project-news {
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.project-news h2 {
+  margin: 0 0 0.55rem;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.news-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.news-item p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.news-meta {
+  color: var(--accent-cyan);
+  font-size: 0.86rem;
+  margin-bottom: 0.4rem !important;
+}
+
 .manga-info {
   display: grid;
   grid-template-columns: 1fr;
@@ -366,6 +394,15 @@ a {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
   border-radius: 10px;
   padding: 0.78rem 0.9rem;
+}
+
+.forum-card {
+  padding: 0.9rem;
+}
+
+.forum-form {
+  display: grid;
+  gap: 0.55rem;
 }
 
 .link-accent {

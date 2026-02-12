@@ -30,6 +30,17 @@
       </p>
     </section>
 
+    <section class="project-news card" aria-labelledby="project-news-title">
+      <h2 id="project-news-title">Infos</h2>
+      <article class="news-item">
+        <p class="news-meta">Mise a jour projet</p>
+        <p>
+          Je vais commencer a mettre tous les chapitres disponibles et essayer de proposer la meilleure qualite
+          possible pour la lecture.
+        </p>
+      </article>
+    </section>
+
     <section id="manga-info" class="manga-info card" aria-labelledby="manga-title">
       <div class="cover-wrap">
         <img id="manga-cover" src="" alt="Couverture du manga Nine Peaks" loading="lazy">
@@ -63,6 +74,23 @@
       </div>
       <div id="bookmark-list" class="bookmark-list"></div>
       <p id="bookmark-empty" class="state-msg">Connecte-toi pour sauvegarder tes pages favorites.</p>
+    </section>
+
+    <section class="chapter-section" aria-labelledby="forum-heading">
+      <div class="section-head">
+        <h2 id="forum-heading">Forum</h2>
+      </div>
+      <section class="card forum-card" aria-label="Discussion communautaire">
+        <form id="forum-form" class="forum-form" novalidate>
+          <textarea id="forum-input" class="input-textarea" placeholder="Parle avec la communaute..." maxlength="800"></textarea>
+          <div class="comment-actions">
+            <button id="forum-submit" class="btn primary" type="submit">Envoyer</button>
+            <span id="forum-user" class="muted">Connecte-toi pour participer</span>
+          </div>
+        </form>
+        <div id="forum-list" class="comments-list"></div>
+        <p id="forum-empty" class="state-msg">Aucun message pour le moment.</p>
+      </section>
     </section>
   </main>
 

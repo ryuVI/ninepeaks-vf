@@ -3,6 +3,7 @@ const DATA_PATH = './data/chapters.json';
 const DATA_OVERRIDE_KEY = 'nine_peaks_data_override';
 const SITE_DATA_KEY = 'nine_peaks_site_data';
 const COMMENTS_KEY = 'nine_peaks_comments';
+const FORUM_KEY = 'nine_peaks_forum_messages';
 
 let chaptersCache = [];
 let activeChapter = null;
@@ -71,6 +72,21 @@ function setChapterComments(chapterNumber, comments) {
   const store = readCommentsStore();
   store[String(chapterNumber)] = comments;
   saveCommentsStore(store);
+}
+
+function readForumMessages() {
+  try {
+    const raw = localStorage.getItem(FORUM_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveForumMessages(messages) {
+  localStorage.setItem(FORUM_KEY, JSON.stringify(messages));
 }
 
 function getLocalDataOverride() {
@@ -514,6 +530,80 @@ function setupComments(chapterNumber) {
   });
 }
 
+function renderForum() {
+  const listEl = document.querySelector('#forum-list');
+  const emptyEl = document.querySelector('#forum-empty');
+  if (!listEl || !emptyEl) return;
+
+  const user = getCurrentUserSafe();
+  const messages = readForumMessages().slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  if (!messages.length) {
+    listEl.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+
+  emptyEl.classList.add('hidden');
+  listEl.innerHTML = '';
+  messages.forEach((message) => {
+    const canDelete = user && user.username === message.author;
+    const item = document.createElement('article');
+    item.className = 'comment-item';
+    item.innerHTML = `
+      <div class="comment-meta">
+        <strong>${message.author}</strong>
+        <span>${formatCommentDate(message.createdAt)}</span>
+      </div>
+      <p class="comment-content">${message.content}</p>
+      ${canDelete ? `<div class="comment-actions"><button class="btn ghost" data-delete-forum="${message.id}" type="button">Supprimer</button></div>` : ''}
+    `;
+    listEl.appendChild(item);
+  });
+
+  listEl.querySelectorAll('button[data-delete-forum]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.deleteForum;
+      const next = readForumMessages().filter((message) => message.id !== id);
+      saveForumMessages(next);
+      renderForum();
+    });
+  });
+}
+
+function setupForum() {
+  const formEl = document.querySelector('#forum-form');
+  const inputEl = document.querySelector('#forum-input');
+  const submitEl = document.querySelector('#forum-submit');
+  const userEl = document.querySelector('#forum-user');
+  if (!formEl || !inputEl || !submitEl || !userEl) return;
+
+  const user = getCurrentUserSafe();
+  renderForum();
+  if (!user) {
+    submitEl.disabled = true;
+    userEl.textContent = 'Connecte-toi pour participer';
+    return;
+  }
+
+  submitEl.disabled = false;
+  userEl.textContent = `Connecte: ${user.username}`;
+  formEl.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const content = String(inputEl.value || '').trim();
+    if (!content || content.length > 800) return;
+    const next = readForumMessages();
+    next.push({
+      id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      author: user.username,
+      content,
+      createdAt: new Date().toISOString()
+    });
+    saveForumMessages(next);
+    inputEl.value = '';
+    renderForum();
+  });
+}
+
 function scrollByViewport(direction) {
   const delta = Math.round(window.innerHeight * 0.9);
   window.scrollBy({
@@ -796,6 +886,7 @@ async function initIndexPage() {
     renderChapterList(chaptersCache);
     renderChapterMenu(chaptersCache);
     renderBookmarks(chaptersCache);
+    setupForum();
   } catch (error) {
     console.error('[debug] Erreur index:', error);
     showIndexError('Impossible de charger les chapitres. Verifie data/chapters.json');
