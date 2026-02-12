@@ -5,8 +5,8 @@ const LEGACY_OVERRIDE_KEY = 'nine_peaks_data_override';
 let projectDirectoryHandle = null;
 let currentData = null;
 
-function showMessage(id, text, isError = false) {
-  const el = document.querySelector(id);
+function showMessage(text, isError = false) {
+  const el = document.querySelector('#admin-message');
   if (!el) return;
   el.textContent = text;
   el.classList.remove('hidden');
@@ -15,13 +15,6 @@ function showMessage(id, text, isError = false) {
 
 function setUploadStatus(text, isError = false) {
   const statusEl = document.querySelector('#upload-status');
-  if (!statusEl) return;
-  statusEl.textContent = text;
-  statusEl.classList.toggle('error', isError);
-}
-
-function setSingleUploadStatus(text, isError = false) {
-  const statusEl = document.querySelector('#single-upload-status');
   if (!statusEl) return;
   statusEl.textContent = text;
   statusEl.classList.toggle('error', isError);
@@ -90,51 +83,17 @@ function removeChapterFromData(chapterNumber) {
   return true;
 }
 
-function fillQuickForms(data) {
+function fillMangaForm(data) {
   const manga = data.manga || {};
-  const chapters = Array.isArray(data.chapters) ? data.chapters : [];
-  const lastChapter = chapters.slice().sort((a, b) => b.number - a.number)[0];
-
   const titleInput = document.querySelector('#quick-manga-title');
   const coverInput = document.querySelector('#quick-manga-cover');
   const synopsisInput = document.querySelector('#quick-manga-synopsis');
   const genresInput = document.querySelector('#quick-manga-genres');
-  const chapterNumber = document.querySelector('#quick-chapter-number');
-  const chapterTitle = document.querySelector('#quick-chapter-title');
-  const chapterDate = document.querySelector('#quick-chapter-date');
-  const chapterPages = document.querySelector('#quick-chapter-pages');
-  const chapterFolder = document.querySelector('#quick-chapter-folder');
-  const chapterCover = document.querySelector('#quick-chapter-cover');
 
   if (titleInput) titleInput.value = manga.title || '';
   if (coverInput) coverInput.value = manga.cover || '';
   if (synopsisInput) synopsisInput.value = manga.synopsis || '';
   if (genresInput) genresInput.value = Array.isArray(manga.genres) ? manga.genres.join(', ') : '';
-
-  if (lastChapter) {
-    if (chapterNumber) chapterNumber.value = String(lastChapter.number || '');
-    if (chapterTitle) chapterTitle.value = lastChapter.title || '';
-    if (chapterDate) chapterDate.value = lastChapter.date || '';
-    if (chapterPages) chapterPages.value = String(lastChapter.pages || '');
-    if (chapterFolder) chapterFolder.value = lastChapter.folder || '';
-    if (chapterCover) chapterCover.value = lastChapter.cover || '';
-  }
-}
-
-function prefillChapterFormFromRecord(chapter) {
-  const chapterNumberInput = document.querySelector('#quick-chapter-number');
-  const chapterTitleInput = document.querySelector('#quick-chapter-title');
-  const chapterDateInput = document.querySelector('#quick-chapter-date');
-  const chapterPagesInput = document.querySelector('#quick-chapter-pages');
-  const chapterFolderInput = document.querySelector('#quick-chapter-folder');
-  const chapterCoverInput = document.querySelector('#quick-chapter-cover');
-
-  if (chapterNumberInput) chapterNumberInput.value = String(chapter.number);
-  if (chapterTitleInput) chapterTitleInput.value = chapter.title || '';
-  if (chapterDateInput) chapterDateInput.value = chapter.date || '';
-  if (chapterPagesInput) chapterPagesInput.value = String(chapter.pages || 1);
-  if (chapterFolderInput) chapterFolderInput.value = chapter.folder || '';
-  if (chapterCoverInput) chapterCoverInput.value = chapter.cover || '';
 }
 
 function renderChapterManagerList() {
@@ -178,33 +137,22 @@ function renderChapterManagerList() {
       const number = Number.parseInt(btn.dataset.number, 10);
       const ok = removeChapterFromData(number);
       if (!ok) {
-        showMessage('#admin-message', `Chapitre ${number} introuvable.`, true);
+        showMessage(`Chapitre ${number} introuvable.`, true);
         return;
       }
       renderChapterManagerList();
-      showMessage('#admin-message', `Chapitre ${number} supprime.`);
+      showMessage(`Chapitre ${number} supprime.`);
     });
   });
 }
 
-function setupQuickActions() {
+function setupMangaActions() {
   const applyMangaBtn = document.querySelector('#apply-manga');
-  const prefillPathsBtn = document.querySelector('#prefill-chapter-paths');
-  const applyChapterBtn = document.querySelector('#apply-chapter');
-  const removeChapterBtn = document.querySelector('#remove-chapter');
   const resetDataBtn = document.querySelector('#reset-data');
-
   const mangaTitleInput = document.querySelector('#quick-manga-title');
   const mangaCoverInput = document.querySelector('#quick-manga-cover');
   const mangaSynopsisInput = document.querySelector('#quick-manga-synopsis');
   const mangaGenresInput = document.querySelector('#quick-manga-genres');
-
-  const chapterNumberInput = document.querySelector('#quick-chapter-number');
-  const chapterTitleInput = document.querySelector('#quick-chapter-title');
-  const chapterDateInput = document.querySelector('#quick-chapter-date');
-  const chapterPagesInput = document.querySelector('#quick-chapter-pages');
-  const chapterFolderInput = document.querySelector('#quick-chapter-folder');
-  const chapterCoverInput = document.querySelector('#quick-chapter-cover');
 
   applyMangaBtn?.addEventListener('click', () => {
     currentData.manga.title = String(mangaTitleInput?.value || '').trim();
@@ -215,83 +163,19 @@ function setupQuickActions() {
       .map((genre) => genre.trim())
       .filter(Boolean);
     persistSiteData();
-    showMessage('#admin-message', 'Infos manga mises a jour.');
-  });
-
-  prefillPathsBtn?.addEventListener('click', () => {
-    const number = Number.parseInt(String(chapterNumberInput?.value || ''), 10);
-    if (Number.isNaN(number) || number < 1) {
-      showMessage('#admin-message', 'Renseigne un numero de chapitre valide.', true);
-      return;
-    }
-    const folder = `chapter-${number}`;
-    if (chapterFolderInput && !chapterFolderInput.value.trim()) {
-      chapterFolderInput.value = folder;
-    }
-    if (chapterCoverInput && !chapterCoverInput.value.trim()) {
-      chapterCoverInput.value = `mangas/nine-peaks/${folder}/cover.jpg`;
-    }
-    showMessage('#admin-message', 'Paths chapitre pre-remplis.');
-  });
-
-  applyChapterBtn?.addEventListener('click', () => {
-    const number = Number.parseInt(String(chapterNumberInput?.value || ''), 10);
-    const pages = Number.parseInt(String(chapterPagesInput?.value || ''), 10);
-    const title = String(chapterTitleInput?.value || '').trim();
-    const date = String(chapterDateInput?.value || '').trim();
-    const folder = String(chapterFolderInput?.value || '').trim();
-    const cover = String(chapterCoverInput?.value || '').trim();
-
-    if (Number.isNaN(number) || number < 1) {
-      showMessage('#admin-message', 'Numero de chapitre invalide.', true);
-      return;
-    }
-    if (Number.isNaN(pages) || pages < 1) {
-      showMessage('#admin-message', 'Nombre de pages invalide.', true);
-      return;
-    }
-    if (!title || !date || !folder) {
-      showMessage('#admin-message', 'Renseigne titre, date et dossier du chapitre.', true);
-      return;
-    }
-
-    setChapterInData({
-      number,
-      title,
-      date,
-      pages,
-      folder,
-      cover: cover || `mangas/nine-peaks/${folder}/cover.jpg`
-    });
-    renderChapterManagerList();
-    showMessage('#admin-message', `Chapitre ${number} ajoute/mis a jour.`);
-  });
-
-  removeChapterBtn?.addEventListener('click', () => {
-    const number = Number.parseInt(String(chapterNumberInput?.value || ''), 10);
-    if (Number.isNaN(number) || number < 1) {
-      showMessage('#admin-message', 'Numero de chapitre invalide.', true);
-      return;
-    }
-    const ok = removeChapterFromData(number);
-    if (!ok) {
-      showMessage('#admin-message', `Chapitre ${number} introuvable.`, true);
-      return;
-    }
-    renderChapterManagerList();
-    showMessage('#admin-message', `Chapitre ${number} supprime.`);
+    showMessage('Infos manga mises a jour.');
   });
 
   resetDataBtn?.addEventListener('click', async () => {
     resetSiteDataStorage();
     try {
       currentData = await loadBaseData();
-      fillQuickForms(currentData);
+      fillMangaForm(currentData);
       renderChapterManagerList();
-      showMessage('#admin-message', 'Retour aux donnees de base effectue.');
+      showMessage('Retour aux donnees de base effectue.');
     } catch (error) {
       console.error('[debug] Erreur reset data:', error);
-      showMessage('#admin-message', 'Impossible de recharger les donnees de base.', true);
+      showMessage('Impossible de recharger les donnees de base.', true);
     }
   });
 }
@@ -329,37 +213,11 @@ async function writeChapterImagesToProject(chapterNumber, files) {
   return chapterFolder;
 }
 
-async function writeSinglePageToProject(chapterFolder, pageNumber, file) {
-  const mangasDir = await ensureSubDirectory(projectDirectoryHandle, 'mangas');
-  const ninePeaksDir = await ensureSubDirectory(mangasDir, 'nine-peaks');
-  const chapterDir = await ensureSubDirectory(ninePeaksDir, chapterFolder);
-  const fileName = `${String(pageNumber).padStart(2, '0')}.jpg`;
-  await writeFile(chapterDir, fileName, file);
-}
-
 async function writeChaptersJsonToProject() {
   if (!projectDirectoryHandle) return;
   const dataDir = await ensureSubDirectory(projectDirectoryHandle, 'data');
   const blob = new Blob([JSON.stringify(currentData, null, 2)], { type: 'application/json' });
   await writeFile(dataDir, 'chapters.json', blob);
-}
-
-function getOrCreateChapterRecord(chapterNumber, fallbackTitle, fallbackDate) {
-  const found = currentData.chapters.find((chapter) => chapter.number === chapterNumber);
-  if (found) return found;
-
-  const folder = `chapter-${chapterNumber}`;
-  const created = {
-    number: chapterNumber,
-    title: fallbackTitle || `Chapitre ${chapterNumber}`,
-    date: fallbackDate || new Date().toISOString().slice(0, 10),
-    pages: 0,
-    folder,
-    cover: `mangas/nine-peaks/${folder}/cover.jpg`
-  };
-  currentData.chapters.push(created);
-  sortChapters();
-  return created;
 }
 
 function setupDirectUpload() {
@@ -424,80 +282,12 @@ function setupDirectUpload() {
 
       await writeChaptersJsonToProject();
       renderChapterManagerList();
-      setUploadStatus(`Chapitre ${number} upload termine (${fileCheck.files.length} pages).`);
-      showMessage('#admin-message', `Chapitre ${number} ajoute avec succes.`);
+      setUploadStatus(`Chapitre ${number} ajoute (${fileCheck.files.length} pages).`);
+      showMessage(`Chapitre ${number} ajoute avec succes.`);
+      filesInput.value = '';
     } catch (error) {
       console.error('[debug] Erreur upload:', error);
       setUploadStatus('Echec upload. Verifie les permissions dossier.', true);
-    }
-  });
-}
-
-function setupSinglePageUpload() {
-  const uploadBtn = document.querySelector('#upload-single-page-btn');
-  const chapterNumberInput = document.querySelector('#single-page-chapter-number');
-  const pageNumberInput = document.querySelector('#single-page-number');
-  const titleInput = document.querySelector('#single-page-title');
-  const dateInput = document.querySelector('#single-page-date');
-  const fileInput = document.querySelector('#single-page-file');
-
-  if (!uploadBtn || !chapterNumberInput || !pageNumberInput || !titleInput || !dateInput || !fileInput) return;
-
-  if (!window.showDirectoryPicker) {
-    setSingleUploadStatus('Upload page par page non supporte ici. Utilise Chrome/Edge recent.', true);
-    uploadBtn.disabled = true;
-    return;
-  }
-
-  uploadBtn.addEventListener('click', async () => {
-    if (!projectDirectoryHandle) {
-      setSingleUploadStatus('Choisis d abord le dossier projet avec le bouton plus haut.', true);
-      return;
-    }
-
-    const chapterNumber = Number.parseInt(String(chapterNumberInput.value || ''), 10);
-    const manualPageNumber = Number.parseInt(String(pageNumberInput.value || ''), 10);
-    const title = String(titleInput.value || '').trim();
-    const date = String(dateInput.value || '').trim();
-    const file = fileInput.files?.[0];
-
-    if (Number.isNaN(chapterNumber) || chapterNumber < 1) {
-      setSingleUploadStatus('Numero de chapitre invalide.', true);
-      return;
-    }
-    if (!file || !/\.(jpe?g)$/i.test(file.name)) {
-      setSingleUploadStatus('Selectionne une image jpg/jpeg valide.', true);
-      return;
-    }
-
-    try {
-      setSingleUploadStatus('Ajout page en cours...');
-      const chapter = getOrCreateChapterRecord(chapterNumber, title, date);
-      const pageNumber = Number.isNaN(manualPageNumber) || manualPageNumber < 1
-        ? (chapter.pages || 0) + 1
-        : manualPageNumber;
-
-      await writeSinglePageToProject(chapter.folder, pageNumber, file);
-
-      chapter.pages = Math.max(chapter.pages || 0, pageNumber);
-      if (pageNumber === 1) {
-        chapter.cover = `mangas/nine-peaks/${chapter.folder}/cover.jpg`;
-        const mangasDir = await ensureSubDirectory(projectDirectoryHandle, 'mangas');
-        const ninePeaksDir = await ensureSubDirectory(mangasDir, 'nine-peaks');
-        const chapterDir = await ensureSubDirectory(ninePeaksDir, chapter.folder);
-        await writeFile(chapterDir, 'cover.jpg', file);
-      }
-
-      persistSiteData();
-      await writeChaptersJsonToProject();
-      renderChapterManagerList();
-      prefillChapterFormFromRecord(chapter);
-
-      setSingleUploadStatus(`Page ${pageNumber} ajoutee au chapitre ${chapterNumber}.`);
-      showMessage('#admin-message', `Chapitre ${chapterNumber} mis a jour (page ${pageNumber}).`);
-    } catch (error) {
-      console.error('[debug] Erreur ajout page unique:', error);
-      setSingleUploadStatus('Echec ajout page. Verifie les permissions dossier.', true);
     }
   });
 }
@@ -509,18 +299,17 @@ async function initAdminPage() {
     const baseData = await loadBaseData();
     const stored = readStoredData();
     currentData = stored || baseData;
-    fillQuickForms(currentData);
+    fillMangaForm(currentData);
     renderChapterManagerList();
-    showMessage('#admin-message', stored ? 'Donnees locales chargees.' : 'Donnees de base chargees.');
+    showMessage(stored ? 'Donnees locales chargees.' : 'Donnees de base chargees.');
   } catch (error) {
     console.error('[debug] Erreur chargement admin:', error);
-    showMessage('#admin-message', 'Impossible de charger les donnees.', true);
+    showMessage('Impossible de charger les donnees.', true);
     return;
   }
 
-  setupQuickActions();
+  setupMangaActions();
   setupDirectUpload();
-  setupSinglePageUpload();
 
   const logoutBtn = document.querySelector('#logout-btn');
   logoutBtn?.addEventListener('click', () => {

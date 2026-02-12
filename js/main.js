@@ -12,6 +12,28 @@ let currentMode = 'scroll';
 let headerLastY = 0;
 let forceHideUi = false;
 
+function stepSinglePage(direction) {
+  if (!activeChapter) return;
+  if (direction === 'next') {
+    activePage = Math.min(activeChapter.pages, activePage + 1);
+  } else {
+    activePage = Math.max(1, activePage - 1);
+  }
+  updateSinglePage(activeChapter);
+}
+
+function refreshPagedNav() {
+  const nav = document.querySelector('#paged-nav');
+  const prev = document.querySelector('#single-prev');
+  const next = document.querySelector('#single-next');
+  if (!nav || !prev || !next || !activeChapter) return;
+
+  const pagedVisible = currentMode === 'paged';
+  nav.classList.toggle('hidden', !pagedVisible);
+  prev.disabled = !pagedVisible || activePage <= 1;
+  next.disabled = !pagedVisible || activePage >= activeChapter.pages;
+}
+
 function readCommentsStore() {
   try {
     const raw = localStorage.getItem(COMMENTS_KEY);
@@ -509,6 +531,7 @@ function updateSinglePage(chapter) {
     );
   }, { once: true });
   updatePageCounter(safePage, chapter.pages);
+  refreshPagedNav();
 }
 
 function setReaderMode(mode) {
@@ -527,6 +550,7 @@ function setReaderMode(mode) {
   if (currentMode === 'paged' && activeChapter) {
     updateSinglePage(activeChapter);
   }
+  refreshPagedNav();
 }
 
 function setupKeyboardNavigation() {
@@ -546,13 +570,11 @@ function setupKeyboardNavigation() {
 
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
       event.preventDefault();
-      activePage = Math.min(activeChapter.pages, activePage + 1);
-      updateSinglePage(activeChapter);
+      stepSinglePage('next');
     }
     if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
       event.preventDefault();
-      activePage = Math.max(1, activePage - 1);
-      updateSinglePage(activeChapter);
+      stepSinglePage('prev');
     }
   });
 }
@@ -568,8 +590,7 @@ function setupFloatingButtons() {
       scrollByViewport('up');
       return;
     }
-    activePage = Math.max(1, activePage - 1);
-    updateSinglePage(activeChapter);
+    stepSinglePage('prev');
   });
 
   downBtn.addEventListener('click', () => {
@@ -578,9 +599,17 @@ function setupFloatingButtons() {
       scrollByViewport('down');
       return;
     }
-    activePage = Math.min(activeChapter.pages, activePage + 1);
-    updateSinglePage(activeChapter);
+    stepSinglePage('next');
   });
+}
+
+function setupPagedNavButtons() {
+  const prevBtn = document.querySelector('#single-prev');
+  const nextBtn = document.querySelector('#single-next');
+  if (!prevBtn || !nextBtn) return;
+
+  prevBtn.addEventListener('click', () => stepSinglePage('prev'));
+  nextBtn.addEventListener('click', () => stepSinglePage('next'));
 }
 
 function setupZoomControls() {
@@ -795,6 +824,7 @@ async function initReaderPage() {
     setZoom(1);
     setupKeyboardNavigation();
     setupFloatingButtons();
+    setupPagedNavButtons();
     setupZoomControls();
     setupModeControls();
     setupBookmarkButton();

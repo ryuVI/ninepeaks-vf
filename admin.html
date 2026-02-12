@@ -53,37 +53,8 @@
           </article>
 
           <article class="admin-box">
-            <h3>Ajout / edition chapitre</h3>
-            <div class="admin-grid">
-              <label for="quick-chapter-number">Numero</label>
-              <input id="quick-chapter-number" type="number" min="1" step="1" placeholder="28">
-
-              <label for="quick-chapter-title">Titre chapitre</label>
-              <input id="quick-chapter-title" type="text" placeholder="Le nouveau chapitre">
-
-              <label for="quick-chapter-date">Date</label>
-              <input id="quick-chapter-date" type="date">
-
-              <label for="quick-chapter-pages">Nb pages</label>
-              <input id="quick-chapter-pages" type="number" min="1" step="1" placeholder="39">
-
-              <label for="quick-chapter-folder">Dossier</label>
-              <input id="quick-chapter-folder" type="text" placeholder="chapter-28">
-
-              <label for="quick-chapter-cover">Cover path chapitre</label>
-              <input id="quick-chapter-cover" type="text" placeholder="mangas/nine-peaks/chapter-28/cover.jpg">
-            </div>
-
-            <div class="admin-actions">
-              <button id="prefill-chapter-paths" class="btn ghost" type="button">Auto-remplir paths</button>
-              <button id="apply-chapter" class="btn primary" type="button">Ajouter / MAJ chapitre</button>
-              <button id="remove-chapter" class="btn ghost" type="button">Supprimer chapitre</button>
-            </div>
-          </article>
-
-          <article class="admin-box">
-            <h3>Upload rapide des images</h3>
-            <p class="muted">Selectionne le dossier du projet, puis envoie directement les pages du chapitre.</p>
+            <h3>Nouveau chapitre</h3>
+            <p class="muted">Ajoute un chapitre en une seule fois: selectionne les images 01, 02, 03...</p>
             <div class="admin-grid">
               <label for="upload-chapter-number">Numero chapitre</label>
               <input id="upload-chapter-number" type="number" min="1" step="1" placeholder="28">
@@ -100,39 +71,14 @@
 
             <div class="admin-actions">
               <button id="select-project-folder" class="btn ghost" type="button">Choisir dossier projet</button>
-              <button id="upload-chapter-btn" class="btn primary" type="button">Uploader chapitre</button>
+              <button id="upload-chapter-btn" class="btn primary" type="button">Ajouter le chapitre</button>
             </div>
             <p id="upload-status" class="muted">Aucun dossier selectionne.</p>
           </article>
 
           <article class="admin-box">
-            <h3>Ajout page par page</h3>
-            <p class="muted">Ajoute une image a un chapitre existant, ou cree le chapitre automatiquement.</p>
-            <div class="admin-grid">
-              <label for="single-page-chapter-number">Numero chapitre</label>
-              <input id="single-page-chapter-number" type="number" min="1" step="1" placeholder="28">
-
-              <label for="single-page-number">Numero de page (laisser vide = page suivante)</label>
-              <input id="single-page-number" type="number" min="1" step="1" placeholder="ex: 12">
-
-              <label for="single-page-title">Titre chapitre (si nouveau)</label>
-              <input id="single-page-title" type="text" placeholder="Titre du chapitre">
-
-              <label for="single-page-date">Date (si nouveau)</label>
-              <input id="single-page-date" type="date">
-
-              <label for="single-page-file">Image de la page (jpg/jpeg)</label>
-              <input id="single-page-file" type="file" accept=".jpg,.jpeg,image/jpeg">
-            </div>
-            <div class="admin-actions">
-              <button id="upload-single-page-btn" class="btn primary" type="button">Ajouter cette page</button>
-            </div>
-            <p id="single-upload-status" class="muted">Pret pour ajout page par page.</p>
-          </article>
-
-          <article class="admin-box">
             <h3>Actions globales</h3>
-            <p class="muted">Les changements sont sauvegardes automatiquement sur le site.</p>
+            <p class="muted">Toutes les pages d un chapitre se gerent via le bouton Editer dans la liste a droite.</p>
             <div class="admin-actions">
               <button id="reset-data" class="btn ghost" type="button">Revenir aux donnees de base</button>
             </div>
@@ -148,7 +94,7 @@
 
         <section class="admin-editor-pane">
           <h3>Menu chapitres</h3>
-          <p class="muted">Gestion intuitive des chapitres: clique pour pre-remplir, supprime en un clic.</p>
+          <p class="muted">Editer ouvre la page dediee pour ajouter/supprimer les pages du chapitre.</p>
           <div id="chapter-manager-list" class="chapter-manager-list"></div>
         </section>
       </div>

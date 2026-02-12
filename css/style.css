@@ -460,6 +460,18 @@ body.ui-forced-hidden #reader-header {
   margin: 0 auto;
 }
 
+.paged-nav {
+  width: min(980px, 100%);
+  margin: 0.7rem auto 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.paged-nav .btn {
+  min-width: 92px;
+}
+
 .reader-comments {
   width: min(980px, 100%);
   margin: 1rem auto 0;
@@ -861,7 +873,7 @@ body.ui-forced-hidden #reader-header {
 }
 
 #upload-status.error,
-#single-upload-status.error {
+#upload-status.error {
   color: #ff9fa7;
 }
 
