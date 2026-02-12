@@ -13,6 +13,23 @@ let currentMode = 'scroll';
 let headerLastY = 0;
 let forceHideUi = false;
 
+function getReaderContentWidth() {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue('--reader-content-width').trim();
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isNaN(parsed) ? 780 : parsed;
+}
+
+function applyImageSizing() {
+  const images = document.querySelectorAll('.page-image');
+  const baseWidth = getReaderContentWidth();
+  images.forEach((image) => {
+    const naturalWidth = Number(image.dataset.naturalWidth || image.naturalWidth || 0);
+    if (!naturalWidth) return;
+    const renderWidth = Math.min(baseWidth, naturalWidth) * currentZoom;
+    image.style.width = `${Math.round(renderWidth)}px`;
+  });
+}
+
 function clearLegacyDataOverrides() {
   try {
     localStorage.removeItem(DATA_OVERRIDE_KEY);
@@ -625,6 +642,7 @@ function setZoom(nextZoom) {
   document.documentElement.style.setProperty('--reader-zoom', String(clamped));
   const label = document.querySelector('#zoom-level');
   if (label) label.textContent = `${Math.round(clamped * 100)}%`;
+  applyImageSizing();
 }
 
 function updateSinglePage(chapter) {
@@ -860,6 +878,10 @@ function renderReaderPages(chapter) {
     image.decoding = 'async';
     image.alt = `Chapitre ${chapter.number} - Page ${pageIndex}`;
     image.src = buildImagePath(chapter, pageIndex);
+    image.addEventListener('load', () => {
+      image.dataset.naturalWidth = String(image.naturalWidth || 0);
+      applyImageSizing();
+    });
     image.addEventListener('error', () => {
       console.log('[debug] Image manquante:', image.src);
       image.alt = `Image manquante - chapitre ${chapter.number} page ${pageIndex}`;
@@ -874,6 +896,7 @@ function renderReaderPages(chapter) {
 
   observePages(chapter.pages);
   updatePageCounter(activePage, chapter.pages);
+  applyImageSizing();
 }
 
 function setReaderTitle(chapter) {
