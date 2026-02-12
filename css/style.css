@@ -95,6 +95,30 @@ a {
   padding: 1.2rem 0 5.5rem;
 }
 
+.about-project {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.about-project h2 {
+  margin: 0 0 0.55rem;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.about-project p {
+  margin: 0 0 0.7rem;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.about-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text-soft);
+  display: grid;
+  gap: 0.4rem;
+}
+
 .card {
   background: linear-gradient(180deg, #1f1f1f 0%, var(--bg-card) 100%);
   border: 1px solid var(--border);
