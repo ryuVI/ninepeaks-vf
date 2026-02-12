@@ -770,6 +770,10 @@ body.ui-forced-hidden #reader-header {
   margin-top: 1rem;
 }
 
+.admin-layout > .admin-editor-pane {
+  grid-column: 1 / -1;
+}
+
 .admin-side {
   display: grid;
   gap: 0.9rem;
@@ -951,8 +955,12 @@ body.ui-forced-hidden #reader-header {
   }
 
   .admin-layout {
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 1fr 1fr;
     align-items: start;
+  }
+
+  .admin-layout > .admin-editor-pane {
+    grid-column: 1 / -1;
   }
 
   .editor-pages-list {

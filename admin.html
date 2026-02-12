@@ -24,14 +24,73 @@
   <main class="container admin-main">
     <section class="card admin-card" aria-labelledby="admin-title">
       <div class="admin-head">
-        <h2 id="admin-title">Gestion rapide du contenu</h2>
-        <p class="muted">Tout se fait ici sans editer le JSON. Ordre conseille: 1) dossier projet 2) upload chapitre 3) edition des pages via "Editer".</p>
+        <h2 id="admin-title">Gestion ordonnee du contenu</h2>
+        <p class="muted">Ordre obligatoire: 1) choisir la racine du projet, 2) creer un chapitre s il n existe pas, 3) selectionner un chapitre existant pour ajouter ou supprimer des pages.</p>
       </div>
 
       <p id="admin-message" class="state-msg hidden" aria-live="polite"></p>
 
       <div class="admin-layout">
+        <section class="admin-editor-pane">
+          <h3>1) Dossier projet</h3>
+          <div class="admin-actions">
+            <button id="select-project-folder" class="btn ghost" type="button">Choisir la racine du projet</button>
+          </div>
+          <p id="upload-status" class="muted">Aucun dossier selectionne.</p>
+        </section>
+
         <aside class="admin-side">
+          <article class="admin-box">
+            <h3>2) Creer un chapitre (obligatoire s il n existe pas)</h3>
+            <div class="admin-grid">
+              <label for="create-chapter-number">Numero chapitre</label>
+              <input id="create-chapter-number" type="number" min="1" step="1" placeholder="28">
+
+              <label for="create-chapter-title">Titre</label>
+              <input id="create-chapter-title" type="text" placeholder="Titre du chapitre">
+
+              <label for="create-chapter-date">Date</label>
+              <input id="create-chapter-date" type="date">
+
+              <label for="create-chapter-files">Images initiales (01, 02, 03...)</label>
+              <input id="create-chapter-files" type="file" accept=".jpg,.jpeg,image/jpeg" multiple>
+            </div>
+            <div class="admin-actions">
+              <button id="create-chapter-btn" class="btn primary" type="button">Creer chapitre</button>
+            </div>
+          </article>
+
+          <article class="admin-box">
+            <h3>3) Selection chapitre existant</h3>
+            <div class="admin-grid">
+              <label for="chapter-select">Chapitre</label>
+              <select id="chapter-select" class="menu-select"></select>
+            </div>
+            <p id="selected-chapter-meta" class="muted">Aucun chapitre selectionne.</p>
+          </article>
+
+          <article class="admin-box">
+            <h3>Ajouter une page au chapitre selectionne</h3>
+            <div class="admin-grid">
+              <label for="add-page-file">Image de la page (jpg/jpeg)</label>
+              <input id="add-page-file" type="file" accept=".jpg,.jpeg,image/jpeg">
+            </div>
+            <div class="admin-actions">
+              <button id="add-page-btn" class="btn primary" type="button">Ajouter page en fin</button>
+            </div>
+          </article>
+
+          <article class="admin-box">
+            <h3>Supprimer une page du chapitre selectionne</h3>
+            <div class="admin-grid">
+              <label for="remove-page-number">Numero page</label>
+              <input id="remove-page-number" type="number" min="1" step="1" placeholder="ex: 4">
+            </div>
+            <div class="admin-actions">
+              <button id="remove-page-btn" class="btn ghost danger" type="button">Supprimer page</button>
+            </div>
+          </article>
+
           <article class="admin-box">
             <h3>Infos manga</h3>
             <div class="admin-grid">
@@ -48,59 +107,11 @@
               <input id="quick-manga-genres" type="text" placeholder="Action, Aventure, Fantasy">
             </div>
             <div class="admin-actions">
-              <button id="apply-manga" class="btn primary" type="button">Appliquer Manga</button>
-            </div>
-          </article>
-
-          <article class="admin-box">
-            <h3>Nouveau chapitre</h3>
-            <ol class="admin-steps muted">
-              <li>Choisir la racine du projet</li>
-              <li>Renseigner numero, titre, date</li>
-              <li>Selectionner toutes les pages puis ajouter</li>
-            </ol>
-            <div class="admin-grid">
-              <label for="upload-chapter-number">Numero chapitre</label>
-              <input id="upload-chapter-number" type="number" min="1" step="1" placeholder="28">
-
-              <label for="upload-chapter-title">Titre chapitre</label>
-              <input id="upload-chapter-title" type="text" placeholder="Titre du chapitre">
-
-              <label for="upload-chapter-date">Date</label>
-              <input id="upload-chapter-date" type="date">
-
-              <label for="upload-chapter-files">Images pages (jpg/jpeg)</label>
-              <input id="upload-chapter-files" type="file" accept=".jpg,.jpeg,image/jpeg" multiple>
-            </div>
-
-            <div class="admin-actions">
-              <button id="select-project-folder" class="btn ghost" type="button">Choisir dossier projet</button>
-              <button id="upload-chapter-btn" class="btn primary" type="button">Ajouter le chapitre</button>
-            </div>
-            <p id="upload-status" class="muted">Aucun dossier selectionne.</p>
-          </article>
-
-          <article class="admin-box">
-            <h3>Actions globales</h3>
-            <p class="muted">Toutes les pages d un chapitre se gerent via le bouton Editer dans la liste a droite.</p>
-            <div class="admin-actions">
+              <button id="apply-manga" class="btn primary" type="button">Appliquer manga</button>
               <button id="reset-data" class="btn ghost" type="button">Revenir aux donnees de base</button>
             </div>
           </article>
-
-          <article class="admin-box">
-            <h3>Aide images</h3>
-            <p class="muted">Convention: <code>01.jpg</code>, <code>02.jpg</code>, ... dans <code>mangas/nine-peaks/chapter-XX/</code>.</p>
-            <p class="muted">Cover manga: <code>mangas/nine-peaks/cover.jpg</code></p>
-            <p class="muted">Cover chapitre: <code>mangas/nine-peaks/chapter-XX/cover.jpg</code></p>
-          </article>
         </aside>
-
-        <section class="admin-editor-pane">
-          <h3>Menu chapitres</h3>
-          <p class="muted">Liste ordonnee du plus recent au plus ancien. Editer ouvre la gestion page par page.</p>
-          <div id="chapter-manager-list" class="chapter-manager-list"></div>
-        </section>
       </div>
     </section>
   </main>
