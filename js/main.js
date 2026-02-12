@@ -927,7 +927,7 @@ async function initReaderPage() {
     setupChapterButtons(chapters, chapterIndex);
     renderReaderPages(activeChapter);
     setReaderMode(currentMode);
-    setZoom(1);
+    setZoom(0.9);
     setupKeyboardNavigation();
     setupFloatingButtons();
     setupPagedNavButtons();

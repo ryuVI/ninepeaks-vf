@@ -15,6 +15,7 @@
   --shadow: 0 18px 36px rgba(0, 0, 0, 0.42);
   --transition: 0.3s ease;
   --reader-zoom: 1;
+  --reader-content-width: 780px;
 }
 
 * {
@@ -488,12 +489,12 @@ body.ui-forced-hidden #reader-header {
 .reader-pages {
   display: grid;
   gap: 0.86rem;
-  width: min(980px, 100%);
+  width: min(var(--reader-content-width), 100%);
   margin: 0 auto;
 }
 
 .reader-single {
-  width: min(980px, 100%);
+  width: min(var(--reader-content-width), 100%);
   margin: 0 auto;
 }
 
@@ -510,7 +511,7 @@ body.ui-forced-hidden #reader-header {
 }
 
 .reader-comments {
-  width: min(980px, 100%);
+  width: min(var(--reader-content-width), 100%);
   margin: 1rem auto 0;
   padding: 0.9rem;
 }
@@ -581,6 +582,8 @@ body.ui-forced-hidden #reader-header {
   border-radius: var(--radius);
   overflow: hidden;
   background: #0f0f14;
+  display: flex;
+  justify-content: center;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
@@ -590,7 +593,8 @@ body.ui-forced-hidden #reader-header {
 }
 
 .page-image {
-  width: calc(100% * var(--reader-zoom));
+  width: auto;
+  max-width: min(100%, calc(var(--reader-content-width) * var(--reader-zoom)));
   height: auto;
   object-fit: contain;
   background: #0b0b10;
