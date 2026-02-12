@@ -13,6 +13,15 @@ let currentMode = 'scroll';
 let headerLastY = 0;
 let forceHideUi = false;
 
+function clearLegacyDataOverrides() {
+  try {
+    localStorage.removeItem(DATA_OVERRIDE_KEY);
+    localStorage.removeItem(SITE_DATA_KEY);
+  } catch {
+    // ignore localStorage failures
+  }
+}
+
 function syncReaderHeaderVisibility() {
   const headerEl = document.querySelector('#reader-header');
   if (!headerEl) return;
@@ -179,10 +188,8 @@ async function fetchData() {
     throw new Error(`Erreur HTTP ${response.status} lors du chargement du JSON`);
   }
   const baseData = await response.json();
-  const overrideData = getLocalDataOverride();
-  const data = overrideData || baseData;
-  console.log('[debug] JSON charge:', data);
-  return data;
+  console.log('[debug] JSON charge (source fichier):', baseData);
+  return baseData;
 }
 
 function formatDate(dateString) {
@@ -940,6 +947,9 @@ async function initReaderPage() {
 function init() {
   const page = document.body.dataset.page;
   console.log('[debug] Initialisation page:', page);
+  if (page === 'index' || page === 'reader') {
+    clearLegacyDataOverrides();
+  }
   if (page === 'index') initIndexPage();
   if (page === 'reader') initReaderPage();
 }
