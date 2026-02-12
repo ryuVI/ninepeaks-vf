@@ -1,7 +1,11 @@
 :root {
   --bg-dark: #0a0a0a;
   --bg-card: #1a1a1a;
-  --accent: #3b82f6;
+  --accent: #e9008e;
+  --accent-orange: #ff7a00;
+  --accent-pink: #ff007a;
+  --accent-purple: #8f2bff;
+  --accent-cyan: #00b7ff;
   --text-main: #f2f2f2;
   --text-soft: #b8b8b8;
   --border: #2a2a2a;
@@ -19,7 +23,12 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: radial-gradient(circle at top, #151a22 0%, var(--bg-dark) 40%), var(--bg-dark);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 122, 0, 0.18) 0%, rgba(255, 122, 0, 0) 34%),
+    radial-gradient(circle at 40% 16%, rgba(255, 0, 122, 0.16) 0%, rgba(255, 0, 122, 0) 36%),
+    radial-gradient(circle at 72% 22%, rgba(143, 43, 255, 0.18) 0%, rgba(143, 43, 255, 0) 38%),
+    radial-gradient(circle at 92% 34%, rgba(0, 183, 255, 0.16) 0%, rgba(0, 183, 255, 0) 40%),
+    var(--bg-dark);
   color: var(--text-main);
   font-family: 'IBM Plex Sans', Arial, sans-serif;
   min-height: 100%;
@@ -85,7 +94,13 @@ a {
   letter-spacing: 0.04em;
   font-size: clamp(1.4rem, 3vw, 2rem);
   font-family: 'Space Grotesk', sans-serif;
-  background: linear-gradient(120deg, #7ab0ff, #3b82f6 45%, #93c5fd);
+  background: linear-gradient(
+    120deg,
+    var(--accent-orange) 0%,
+    var(--accent-pink) 36%,
+    var(--accent-purple) 68%,
+    var(--accent-cyan) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -173,9 +188,9 @@ a {
 }
 
 .tag {
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: #d7e8ff;
-  background: rgba(59, 130, 246, 0.16);
+  border: 1px solid rgba(255, 0, 122, 0.45);
+  color: #ffe8f5;
+  background: rgba(255, 0, 122, 0.18);
   border-radius: 999px;
   padding: 0.28rem 0.75rem;
   font-size: 0.85rem;
@@ -233,7 +248,7 @@ a {
 .chapter-card:focus-within {
   transform: translateY(-5px);
   box-shadow: 0 18px 35px rgba(0, 0, 0, 0.45);
-  border-color: rgba(59, 130, 246, 0.55);
+  border-color: rgba(143, 43, 255, 0.7);
 }
 
 .chapter-thumb {
@@ -265,7 +280,7 @@ a {
 }
 
 .link-accent {
-  color: #8abaff;
+  color: #8bd4ff;
 }
 
 .site-footer {
@@ -400,13 +415,19 @@ a {
 }
 
 .btn.active {
-  border-color: rgba(59, 130, 246, 0.65);
-  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(255, 0, 122, 0.75);
+  background: rgba(255, 0, 122, 0.2);
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #2f73dc, var(--accent));
-  border-color: rgba(114, 168, 255, 0.6);
+  background: linear-gradient(
+    135deg,
+    var(--accent-orange) 0%,
+    var(--accent-pink) 42%,
+    var(--accent-purple) 75%,
+    var(--accent-cyan) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.25);
   color: #fff;
 }
 
