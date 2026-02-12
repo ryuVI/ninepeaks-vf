@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Connexion admin Nine Peaks VF">
+  <title>Login Admin - Nine Peaks VF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="login">
+  <header class="site-header fixed" aria-label="En-tete login">
+    <div class="container header-content split-header">
+      <h1 class="brand-title">Nine Peaks VF</h1>
+      <a class="btn ghost" href="index.html">Accueil</a>
+    </div>
+  </header>
+
+  <main class="container auth-main">
+    <section class="card auth-card" aria-labelledby="login-title">
+      <h2 id="login-title">Connexion admin</h2>
+      <p class="muted">Reserve a l'administration du site.</p>
+
+      <form id="login-form" class="auth-form" novalidate>
+        <label for="admin-username">Nom utilisateur</label>
+        <input id="admin-username" name="username" type="text" autocomplete="username" required>
+
+        <label for="admin-password">Mot de passe</label>
+        <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+
+        <button class="btn primary" type="submit">Se connecter</button>
+      </form>
+
+      <p id="login-message" class="state-msg hidden" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="js/auth.js" defer></script>
+  <script src="js/admin.js" defer></script>
+</body>
+</html>

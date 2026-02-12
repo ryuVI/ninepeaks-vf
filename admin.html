@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Panel admin Nine Peaks VF">
+  <title>Panel Admin - Nine Peaks VF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="admin">
+  <header class="site-header fixed" aria-label="En-tete admin">
+    <div class="container header-content split-header">
+      <h1 class="brand-title">Panel Admin</h1>
+      <div class="header-actions">
+        <a class="btn ghost" href="index.html">Accueil</a>
+        <button id="logout-btn" class="btn ghost" type="button">Se deconnecter</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container admin-main">
+    <section class="card admin-card" aria-labelledby="admin-title">
+      <h2 id="admin-title">Gestion des donnees JSON</h2>
+      <p class="muted">Modifie ici les infos du manga, les chapitres et les couvertures. Les changements sont stockes en local dans ce navigateur.</p>
+
+      <p id="admin-message" class="state-msg hidden" aria-live="polite"></p>
+
+      <label for="json-editor" class="editor-label">data/chapters.json</label>
+      <textarea id="json-editor" class="json-editor" spellcheck="false"></textarea>
+
+      <div class="admin-actions">
+        <button id="save-json" class="btn primary" type="button">Sauvegarder (local)</button>
+        <button id="reset-json" class="btn ghost" type="button">Annuler override</button>
+        <button id="download-json" class="btn ghost" type="button">Telecharger JSON</button>
+      </div>
+
+      <div class="admin-help">
+        <h3>Rappels couv / pages</h3>
+        <p>Pour un chapitre 28: dossier <code>mangas/nine-peaks/chapter-28/</code></p>
+        <p>Pages: <code>01.jpg</code>, <code>02.jpg</code>, etc. Couverture chapitre: <code>cover.jpg</code></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/auth.js" defer></script>
+  <script src="js/admin.js" defer></script>
+</body>
+</html>

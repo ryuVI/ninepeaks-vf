@@ -1,4 +1,4 @@
-﻿# Nine Peaks VF
+# Nine Peaks VF
 
 Site statique de lecture manga compatible GitHub Pages.
 
@@ -6,16 +6,29 @@ Site statique de lecture manga compatible GitHub Pages.
 
 - `index.html` : page d'accueil avec infos manga et liste des chapitres
 - `reader.html` : lecteur vertical avec navigation clavier et boutons
+- `login.html` : connexion admin
+- `admin.html` : panel admin (edition JSON locale)
 - `css/style.css` : theme sombre moderne et responsive
-- `js/main.js` : logique de chargement JSON, rendu, navigation
+- `js/main.js` : logique lecteur + rendu chapitres
+- `js/auth.js` : authentification client
+- `js/admin.js` : gestion login/panel admin
 - `data/chapters.json` : donnees du manga et des chapitres
-- `mangas/nine-peaks/chapter-XX/` : dossiers d'images (01.jpg, 02.jpg, ...)
+- `mangas/nine-peaks/chapter-XX/` : images (01.jpg, 02.jpg, ...)
+
+## Connexion admin
+
+- URL: `login.html`
+- Identifiant: `pcatv`
+- Mot de passe initial: `NinePeaks2026!`
+
+Important: comme le site est 100% statique, cette protection est cote navigateur (pas un vrai backend securise).
 
 ## Ajouter un nouveau chapitre
 
 1. Cree un dossier: `mangas/nine-peaks/chapter-28/`
-2. Ajoute les images nommees en 2 chiffres: `01.jpg`, `02.jpg`, etc.
-3. Ouvre `data/chapters.json` et ajoute un objet dans `chapters`:
+2. Ajoute une couverture: `mangas/nine-peaks/chapter-28/cover.jpg`
+3. Ajoute les pages nommees en 2 chiffres: `01.jpg`, `02.jpg`, etc.
+4. Ouvre `data/chapters.json` et ajoute un objet dans `chapters`:
 
 ```json
 {
@@ -23,20 +36,19 @@ Site statique de lecture manga compatible GitHub Pages.
   "title": "Titre du chapitre",
   "date": "2026-02-13",
   "pages": 39,
-  "folder": "chapter-28"
+  "folder": "chapter-28",
+  "cover": "mangas/nine-peaks/chapter-28/cover.jpg"
 }
 ```
 
-4. Verifie que `pages` correspond au nombre exact d'images dans le dossier.
+5. Verifie que `pages` correspond au nombre exact d'images.
 
 ## Modifier les infos du manga
 
-Edite la section `manga` dans `data/chapters.json`:
+Deux options:
 
-- `title`
-- `cover` (ex: `mangas/nine-peaks/cover.jpg`)
-- `synopsis`
-- `genres` (tableau de tags)
+1. Edition permanente: modifier `data/chapters.json` puis commit/push.
+2. Edition rapide locale: `admin.html` -> modifier JSON -> sauvegarder (stockage local navigateur).
 
 ## Deployer sur GitHub Pages
 
@@ -51,3 +63,4 @@ Edite la section `manga` dans `data/chapters.json`:
 - Ouvre la console navigateur pour les logs `[debug]`.
 - Si un chapitre ne charge pas, verifie `reader.html?chapter=XX`.
 - Si une image manque, un placeholder s'affiche automatiquement.
+- Si le panel admin est vide, verifie que `data/chapters.json` est accessible via serveur HTTP local.

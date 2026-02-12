@@ -11,21 +11,24 @@
       "title": "Le premier pas",
       "date": "2026-02-10",
       "pages": 45,
-      "folder": "chapter-25"
+      "folder": "chapter-25",
+      "cover": "mangas/nine-peaks/chapter-25/cover.jpg"
     },
     {
       "number": 26,
       "title": "Le pacte de sang",
       "date": "2026-02-11",
       "pages": 42,
-      "folder": "chapter-26"
+      "folder": "chapter-26",
+      "cover": "mangas/nine-peaks/chapter-26/cover.jpg"
     },
     {
       "number": 27,
       "title": "Dans la tempete",
       "date": "2026-02-12",
       "pages": 40,
-      "folder": "chapter-27"
+      "folder": "chapter-27",
+      "cover": "mangas/nine-peaks/chapter-27/cover.jpg"
     }
   ]
 }

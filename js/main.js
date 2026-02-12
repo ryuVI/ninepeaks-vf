@@ -1,10 +1,25 @@
-﻿// Point d'entree principal pour index.html et reader.html
+// Point d'entree principal pour index.html et reader.html
 const DATA_PATH = './data/chapters.json';
+const DATA_OVERRIDE_KEY = 'nine_peaks_data_override';
 
 let chaptersCache = [];
 let activeChapter = null;
 let activePage = 1;
 let headerLastY = 0;
+
+function getLocalDataOverride() {
+  try {
+    const raw = localStorage.getItem(DATA_OVERRIDE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.chapters)) return null;
+    console.log('[debug] Override local detecte');
+    return parsed;
+  } catch (error) {
+    console.log('[debug] Override local invalide:', error);
+    return null;
+  }
+}
 
 async function fetchData() {
   console.log('[debug] Chargement JSON:', DATA_PATH);
@@ -12,7 +27,9 @@ async function fetchData() {
   if (!response.ok) {
     throw new Error(`Erreur HTTP ${response.status} lors du chargement du JSON`);
   }
-  const data = await response.json();
+  const baseData = await response.json();
+  const overrideData = getLocalDataOverride();
+  const data = overrideData || baseData;
   console.log('[debug] JSON charge:', data);
   return data;
 }
@@ -37,8 +54,24 @@ function createChapterCard(chapter) {
   article.className = 'chapter-card';
   article.setAttribute('role', 'listitem');
 
+  const coverPath = safeText(chapter.cover, `mangas/nine-peaks/${chapter.folder}/cover.jpg`);
+
+  const thumbWrap = document.createElement('div');
+  thumbWrap.className = 'chapter-thumb';
+
+  const thumbImg = document.createElement('img');
+  thumbImg.src = coverPath;
+  thumbImg.loading = 'lazy';
+  thumbImg.alt = `Couverture chapitre ${chapter.number}`;
+  thumbImg.addEventListener('error', () => {
+    thumbImg.src = 'mangas/nine-peaks/cover.jpg';
+  });
+
+  const content = document.createElement('div');
+  content.className = 'chapter-content';
+
   const title = safeText(chapter.title, `Chapitre ${chapter.number}`);
-  article.innerHTML = `
+  content.innerHTML = `
     <h3>Chapitre ${chapter.number} - ${title}</h3>
     <div class="chapter-meta">
       <span>${formatDate(chapter.date)}</span>
@@ -46,6 +79,10 @@ function createChapterCard(chapter) {
     </div>
     <p><a class="link-accent" href="reader.html?chapter=${chapter.number}" aria-label="Lire le chapitre ${chapter.number}">Lire ce chapitre</a></p>
   `;
+
+  thumbWrap.appendChild(thumbImg);
+  article.appendChild(thumbWrap);
+  article.appendChild(content);
 
   return article;
 }
@@ -62,6 +99,9 @@ function renderMangaInfo(manga) {
   synopsisEl.textContent = safeText(manga.synopsis, 'Synopsis indisponible.');
   coverEl.src = safeText(manga.cover, 'mangas/nine-peaks/cover.jpg');
   coverEl.alt = `Couverture de ${safeText(manga.title, 'Nine Peaks')}`;
+  coverEl.addEventListener('error', () => {
+    coverEl.src = 'mangas/nine-peaks/cover.jpg';
+  });
 
   tagsEl.innerHTML = '';
   const genres = Array.isArray(manga.genres) ? manga.genres : [];

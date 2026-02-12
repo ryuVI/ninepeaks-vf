@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg-dark: #0a0a0a;
   --bg-card: #1a1a1a;
   --accent: #3b82f6;
@@ -56,6 +56,18 @@ a {
   align-items: center;
   justify-content: center;
   min-height: 72px;
+}
+
+.split-header {
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .brand-title {
@@ -149,10 +161,13 @@ a {
 }
 
 .chapter-card {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  gap: 0.8rem;
   background: linear-gradient(180deg, #1c1c1c, #171717);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: 0.8rem;
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
 }
 
@@ -163,7 +178,21 @@ a {
   border-color: rgba(59, 130, 246, 0.55);
 }
 
-.chapter-card h3 {
+.chapter-thumb {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  aspect-ratio: 3 / 4;
+  background: #121212;
+}
+
+.chapter-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chapter-content h3 {
   margin: 0 0 0.35rem;
   font-size: 1.05rem;
 }
@@ -308,6 +337,63 @@ a {
   color: #ff8e8e;
 }
 
+.muted {
+  color: var(--text-soft);
+}
+
+.auth-main,
+.admin-main {
+  padding: 2rem 0 4rem;
+}
+
+.auth-card,
+.admin-card {
+  padding: 1rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.auth-form input,
+.json-editor {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #101010;
+  color: var(--text-main);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+}
+
+.json-editor {
+  min-height: 360px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.editor-label {
+  display: block;
+  margin: 0.8rem 0 0.4rem;
+  color: var(--text-soft);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+}
+
+.admin-help {
+  margin-top: 1rem;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
 .hidden {
   display: none;
 }
@@ -330,6 +416,11 @@ a {
 
   .reader-title-wrap {
     text-align: left;
+  }
+
+  .auth-card,
+  .admin-card {
+    padding: 1.2rem;
   }
 }
 
