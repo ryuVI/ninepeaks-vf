@@ -98,19 +98,19 @@ a {
 .about-project {
   padding: 1rem;
   margin-bottom: 1rem;
-  background: linear-gradient(180deg, #ffd54f 0%, #f6c945 100%);
-  border-color: #c9a321;
+  background: linear-gradient(180deg, #ffd54f 0%, #f6c945 100%) !important;
+  border-color: #c9a321 !important;
 }
 
 .about-project h2 {
   margin: 0 0 0.55rem;
   font-family: 'Space Grotesk', sans-serif;
-  color: #2d2300;
+  color: #ffffff;
 }
 
 .about-project p {
   margin: 0 0 0.7rem;
-  color: #2d2300;
+  color: #ffffff;
   line-height: 1.55;
 }
 
