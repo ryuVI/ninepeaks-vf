@@ -10,8 +10,8 @@
   --text-main: #f6f7fb;
   --text-soft: #b7bdd1;
   --border: #2a2d39;
-  --radius: 14px;
-  --radius-lg: 18px;
+  --radius: 10px;
+  --radius-lg: 14px;
   --shadow: 0 18px 36px rgba(0, 0, 0, 0.42);
   --transition: 0.3s ease;
   --reader-zoom: 1;
@@ -100,7 +100,7 @@ a {
   border: 1px solid #c9a321;
   background: linear-gradient(180deg, #ffd54f 0%, #f6c945 100%);
   color: #ffffff;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.42rem 0.78rem;
   font-size: 0.86rem;
   box-shadow: 0 8px 16px rgba(201, 163, 33, 0.28);
@@ -145,6 +145,20 @@ a {
   background: linear-gradient(180deg, #ffd54f 0%, #f6c945 100%) !important;
   border-color: #c9a321 !important;
   animation: fade-up 0.5s ease both;
+  display: grid;
+  gap: 0.55rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-project::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: rgba(45, 35, 0, 0.32);
 }
 
 .about-project h2 {
@@ -205,7 +219,7 @@ a {
   border: 1px solid rgba(255, 0, 122, 0.45);
   color: #ffe8f5;
   background: rgba(255, 0, 122, 0.2);
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 0.28rem 0.78rem;
   font-size: 0.84rem;
   transition: transform var(--transition), background var(--transition), border-color var(--transition);
@@ -280,7 +294,7 @@ a {
 }
 
 .chapter-thumb {
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.15);
   aspect-ratio: 3 / 4;
@@ -321,7 +335,7 @@ a {
   gap: 0.62rem;
   border: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.78rem 0.9rem;
 }
 
@@ -387,7 +401,7 @@ a {
 
 .zoom-pill {
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.3rem 0.7rem;
   min-width: 64px;
   text-align: center;
@@ -447,7 +461,7 @@ a {
   gap: 0.72rem;
   z-index: 36;
   padding: 0.45rem;
-  border-radius: 999px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(14, 14, 20, 0.72);
   backdrop-filter: blur(10px);
@@ -457,7 +471,7 @@ a {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0.56rem 0.92rem;
   color: var(--text-main);
   cursor: pointer;
@@ -573,7 +587,7 @@ a {
   border: 1px solid var(--border);
   background: #101018;
   color: var(--text-main);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0.62rem 0.72rem;
   font: inherit;
   transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
@@ -619,7 +633,7 @@ a {
 .admin-box,
 .admin-editor-pane {
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.84rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
 }
