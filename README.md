@@ -19,6 +19,7 @@ Site statique de lecture manga (GitHub Pages).
 - Upload direct des images chapitre depuis le panel admin (Chrome/Edge)
 - Gestion des chapitres 100% via interface (ajout / edition / suppression)
 - Menu chapitres avec acces rapide depuis l'accueil
+- Ajout image par image par chapitre (page precise ou page suivante auto)
 
 ## Upload direct depuis le panel admin
 

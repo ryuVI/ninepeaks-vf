@@ -106,6 +106,31 @@
           </article>
 
           <article class="admin-box">
+            <h3>Ajout page par page</h3>
+            <p class="muted">Ajoute une image a un chapitre existant, ou cree le chapitre automatiquement.</p>
+            <div class="admin-grid">
+              <label for="single-page-chapter-number">Numero chapitre</label>
+              <input id="single-page-chapter-number" type="number" min="1" step="1" placeholder="28">
+
+              <label for="single-page-number">Numero de page (laisser vide = page suivante)</label>
+              <input id="single-page-number" type="number" min="1" step="1" placeholder="ex: 12">
+
+              <label for="single-page-title">Titre chapitre (si nouveau)</label>
+              <input id="single-page-title" type="text" placeholder="Titre du chapitre">
+
+              <label for="single-page-date">Date (si nouveau)</label>
+              <input id="single-page-date" type="date">
+
+              <label for="single-page-file">Image de la page (jpg/jpeg)</label>
+              <input id="single-page-file" type="file" accept=".jpg,.jpeg,image/jpeg">
+            </div>
+            <div class="admin-actions">
+              <button id="upload-single-page-btn" class="btn primary" type="button">Ajouter cette page</button>
+            </div>
+            <p id="single-upload-status" class="muted">Pret pour ajout page par page.</p>
+          </article>
+
+          <article class="admin-box">
             <h3>Actions globales</h3>
             <p class="muted">Les changements sont sauvegardes automatiquement sur le site.</p>
             <div class="admin-actions">

@@ -20,6 +20,13 @@ function setUploadStatus(text, isError = false) {
   statusEl.classList.toggle('error', isError);
 }
 
+function setSingleUploadStatus(text, isError = false) {
+  const statusEl = document.querySelector('#single-upload-status');
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  statusEl.classList.toggle('error', isError);
+}
+
 function parseJsonOrNull(raw) {
   try {
     return JSON.parse(raw);
@@ -325,11 +332,37 @@ async function writeChapterImagesToProject(chapterNumber, files) {
   return chapterFolder;
 }
 
+async function writeSinglePageToProject(chapterFolder, pageNumber, file) {
+  const mangasDir = await ensureSubDirectory(projectDirectoryHandle, 'mangas');
+  const ninePeaksDir = await ensureSubDirectory(mangasDir, 'nine-peaks');
+  const chapterDir = await ensureSubDirectory(ninePeaksDir, chapterFolder);
+  const fileName = `${String(pageNumber).padStart(2, '0')}.jpg`;
+  await writeFile(chapterDir, fileName, file);
+}
+
 async function writeChaptersJsonToProject() {
   if (!projectDirectoryHandle) return;
   const dataDir = await ensureSubDirectory(projectDirectoryHandle, 'data');
   const blob = new Blob([JSON.stringify(currentData, null, 2)], { type: 'application/json' });
   await writeFile(dataDir, 'chapters.json', blob);
+}
+
+function getOrCreateChapterRecord(chapterNumber, fallbackTitle, fallbackDate) {
+  const found = currentData.chapters.find((chapter) => chapter.number === chapterNumber);
+  if (found) return found;
+
+  const folder = `chapter-${chapterNumber}`;
+  const created = {
+    number: chapterNumber,
+    title: fallbackTitle || `Chapitre ${chapterNumber}`,
+    date: fallbackDate || new Date().toISOString().slice(0, 10),
+    pages: 0,
+    folder,
+    cover: `mangas/nine-peaks/${folder}/cover.jpg`
+  };
+  currentData.chapters.push(created);
+  sortChapters();
+  return created;
 }
 
 function setupDirectUpload() {
@@ -403,6 +436,75 @@ function setupDirectUpload() {
   });
 }
 
+function setupSinglePageUpload() {
+  const uploadBtn = document.querySelector('#upload-single-page-btn');
+  const chapterNumberInput = document.querySelector('#single-page-chapter-number');
+  const pageNumberInput = document.querySelector('#single-page-number');
+  const titleInput = document.querySelector('#single-page-title');
+  const dateInput = document.querySelector('#single-page-date');
+  const fileInput = document.querySelector('#single-page-file');
+
+  if (!uploadBtn || !chapterNumberInput || !pageNumberInput || !titleInput || !dateInput || !fileInput) return;
+
+  if (!window.showDirectoryPicker) {
+    setSingleUploadStatus('Upload page par page non supporte ici. Utilise Chrome/Edge recent.', true);
+    uploadBtn.disabled = true;
+    return;
+  }
+
+  uploadBtn.addEventListener('click', async () => {
+    if (!projectDirectoryHandle) {
+      setSingleUploadStatus('Choisis d abord le dossier projet avec le bouton plus haut.', true);
+      return;
+    }
+
+    const chapterNumber = Number.parseInt(String(chapterNumberInput.value || ''), 10);
+    const manualPageNumber = Number.parseInt(String(pageNumberInput.value || ''), 10);
+    const title = String(titleInput.value || '').trim();
+    const date = String(dateInput.value || '').trim();
+    const file = fileInput.files?.[0];
+
+    if (Number.isNaN(chapterNumber) || chapterNumber < 1) {
+      setSingleUploadStatus('Numero de chapitre invalide.', true);
+      return;
+    }
+    if (!file || !/\.(jpe?g)$/i.test(file.name)) {
+      setSingleUploadStatus('Selectionne une image jpg/jpeg valide.', true);
+      return;
+    }
+
+    try {
+      setSingleUploadStatus('Ajout page en cours...');
+      const chapter = getOrCreateChapterRecord(chapterNumber, title, date);
+      const pageNumber = Number.isNaN(manualPageNumber) || manualPageNumber < 1
+        ? (chapter.pages || 0) + 1
+        : manualPageNumber;
+
+      await writeSinglePageToProject(chapter.folder, pageNumber, file);
+
+      chapter.pages = Math.max(chapter.pages || 0, pageNumber);
+      if (pageNumber === 1) {
+        chapter.cover = `mangas/nine-peaks/${chapter.folder}/cover.jpg`;
+        const mangasDir = await ensureSubDirectory(projectDirectoryHandle, 'mangas');
+        const ninePeaksDir = await ensureSubDirectory(mangasDir, 'nine-peaks');
+        const chapterDir = await ensureSubDirectory(ninePeaksDir, chapter.folder);
+        await writeFile(chapterDir, 'cover.jpg', file);
+      }
+
+      persistSiteData();
+      await writeChaptersJsonToProject();
+      renderChapterManagerList();
+      prefillChapterFormFromRecord(chapter);
+
+      setSingleUploadStatus(`Page ${pageNumber} ajoutee au chapitre ${chapterNumber}.`);
+      showMessage('#admin-message', `Chapitre ${chapterNumber} mis a jour (page ${pageNumber}).`);
+    } catch (error) {
+      console.error('[debug] Erreur ajout page unique:', error);
+      setSingleUploadStatus('Echec ajout page. Verifie les permissions dossier.', true);
+    }
+  });
+}
+
 async function initAdminPage() {
   if (!window.Auth || !window.Auth.requireAdmin()) return;
 
@@ -421,6 +523,7 @@ async function initAdminPage() {
 
   setupQuickActions();
   setupDirectUpload();
+  setupSinglePageUpload();
 
   const logoutBtn = document.querySelector('#logout-btn');
   logoutBtn?.addEventListener('click', () => {

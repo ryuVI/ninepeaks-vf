@@ -761,7 +761,8 @@ body.ui-forced-hidden #reader-header {
   font-size: 0.9rem;
 }
 
-#upload-status.error {
+#upload-status.error,
+#single-upload-status.error {
   color: #ff9fa7;
 }
 
