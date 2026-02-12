@@ -14,6 +14,7 @@ Site statique de lecture manga (GitHub Pages).
 - Zoom lecteur
 - Bookmarks par utilisateur
 - Connexion / inscription locale
+- Auth renforcee (PBKDF2 + sel, lock anti brute-force, migration anciens comptes)
 - Panel admin (compte `pcatv`)
 - Upload direct des images chapitre depuis le panel admin (Chrome/Edge)
 - Gestion des chapitres 100% via interface (ajout / edition / suppression)
@@ -39,6 +40,16 @@ Le panel va:
 Tu n'as plus besoin d'editer `chapters.json` a la main:
 - ajoute/modifie/supprime les chapitres depuis le panel admin
 - les donnees sont sauvegardees automatiquement pour le site
+
+## Securite auth (cote client)
+
+- Hash mot de passe: PBKDF2 SHA-256 avec sel unique par utilisateur
+- Migration automatique des anciens comptes (hash legacy) vers PBKDF2
+- Lock temporaire apres trop d'echecs de connexion
+- Delai progressif apres echec pour limiter le brute-force
+- Regles mot de passe renforcees a l'inscription
+
+Note: sans backend, ce systeme reste une securite locale navigateur.
 
 ## Lancer en local
 

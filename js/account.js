@@ -29,6 +29,8 @@ function initAccountPage() {
 
   loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const loginButton = loginForm.querySelector('button[type="submit"]');
+    if (loginButton) loginButton.disabled = true;
     const formData = new FormData(loginForm);
     const username = String(formData.get('username') || '');
     const password = String(formData.get('password') || '');
@@ -37,6 +39,7 @@ function initAccountPage() {
     console.log('[debug] Login utilisateur:', result);
     if (!result.ok) {
       showAuthMessage(result.message, true);
+      if (loginButton) loginButton.disabled = false;
       return;
     }
     showAuthMessage('Connexion OK. Redirection...');
@@ -45,6 +48,8 @@ function initAccountPage() {
 
   signupForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const signupButton = signupForm.querySelector('button[type="submit"]');
+    if (signupButton) signupButton.disabled = true;
     const formData = new FormData(signupForm);
     const username = String(formData.get('username') || '');
     const password = String(formData.get('password') || '');
@@ -53,12 +58,14 @@ function initAccountPage() {
     console.log('[debug] Signup utilisateur:', signupResult);
     if (!signupResult.ok) {
       showAuthMessage(signupResult.message, true);
+      if (signupButton) signupButton.disabled = false;
       return;
     }
 
     const loginResult = await window.Auth.login(username, password);
     if (!loginResult.ok) {
       showAuthMessage('Compte cree, mais connexion auto impossible.', true);
+      if (signupButton) signupButton.disabled = false;
       return;
     }
     showAuthMessage('Compte cree et connecte. Redirection...');
