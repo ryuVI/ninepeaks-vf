@@ -23,24 +23,82 @@
 
   <main class="container admin-main">
     <section class="card admin-card" aria-labelledby="admin-title">
-      <h2 id="admin-title">Gestion des donnees JSON</h2>
-      <p class="muted">Modifie ici les infos du manga, les chapitres et les couvertures. Les changements sont stockes en local dans ce navigateur.</p>
+      <div class="admin-head">
+        <h2 id="admin-title">Gestion rapide du contenu</h2>
+        <p class="muted">Ajoute ou modifie les infos du manga et des chapitres sans editer tout le JSON a la main.</p>
+      </div>
 
       <p id="admin-message" class="state-msg hidden" aria-live="polite"></p>
 
-      <label for="json-editor" class="editor-label">data/chapters.json</label>
-      <textarea id="json-editor" class="json-editor" spellcheck="false"></textarea>
+      <div class="admin-layout">
+        <aside class="admin-side">
+          <article class="admin-box">
+            <h3>Infos manga</h3>
+            <div class="admin-grid">
+              <label for="quick-manga-title">Titre</label>
+              <input id="quick-manga-title" type="text" placeholder="Nine Peaks">
 
-      <div class="admin-actions">
-        <button id="save-json" class="btn primary" type="button">Sauvegarder (local)</button>
-        <button id="reset-json" class="btn ghost" type="button">Annuler override</button>
-        <button id="download-json" class="btn ghost" type="button">Telecharger JSON</button>
-      </div>
+              <label for="quick-manga-cover">Cover path</label>
+              <input id="quick-manga-cover" type="text" placeholder="mangas/nine-peaks/cover.jpg">
 
-      <div class="admin-help">
-        <h3>Rappels couv / pages</h3>
-        <p>Pour un chapitre 28: dossier <code>mangas/nine-peaks/chapter-28/</code></p>
-        <p>Pages: <code>01.jpg</code>, <code>02.jpg</code>, etc. Couverture chapitre: <code>cover.jpg</code></p>
+              <label for="quick-manga-synopsis">Synopsis</label>
+              <textarea id="quick-manga-synopsis" class="input-textarea" placeholder="Synopsis du manga..."></textarea>
+
+              <label for="quick-manga-genres">Genres (virgules)</label>
+              <input id="quick-manga-genres" type="text" placeholder="Action, Aventure, Fantasy">
+            </div>
+            <div class="admin-actions">
+              <button id="apply-manga" class="btn primary" type="button">Appliquer Manga</button>
+            </div>
+          </article>
+
+          <article class="admin-box">
+            <h3>Ajout / edition chapitre</h3>
+            <div class="admin-grid">
+              <label for="quick-chapter-number">Numero</label>
+              <input id="quick-chapter-number" type="number" min="1" step="1" placeholder="28">
+
+              <label for="quick-chapter-title">Titre chapitre</label>
+              <input id="quick-chapter-title" type="text" placeholder="Le nouveau chapitre">
+
+              <label for="quick-chapter-date">Date</label>
+              <input id="quick-chapter-date" type="date">
+
+              <label for="quick-chapter-pages">Nb pages</label>
+              <input id="quick-chapter-pages" type="number" min="1" step="1" placeholder="39">
+
+              <label for="quick-chapter-folder">Dossier</label>
+              <input id="quick-chapter-folder" type="text" placeholder="chapter-28">
+
+              <label for="quick-chapter-cover">Cover path chapitre</label>
+              <input id="quick-chapter-cover" type="text" placeholder="mangas/nine-peaks/chapter-28/cover.jpg">
+            </div>
+
+            <div class="admin-actions">
+              <button id="prefill-chapter-paths" class="btn ghost" type="button">Auto-remplir paths</button>
+              <button id="apply-chapter" class="btn primary" type="button">Ajouter / MAJ chapitre</button>
+              <button id="remove-chapter" class="btn ghost" type="button">Supprimer chapitre</button>
+            </div>
+          </article>
+
+          <article class="admin-box">
+            <h3>Aide images</h3>
+            <p class="muted">Convention: <code>01.jpg</code>, <code>02.jpg</code>, ... dans <code>mangas/nine-peaks/chapter-XX/</code>.</p>
+            <p class="muted">Cover manga: <code>mangas/nine-peaks/cover.jpg</code></p>
+            <p class="muted">Cover chapitre: <code>mangas/nine-peaks/chapter-XX/cover.jpg</code></p>
+          </article>
+        </aside>
+
+        <section class="admin-editor-pane">
+          <label for="json-editor" class="editor-label">data/chapters.json</label>
+          <textarea id="json-editor" class="json-editor" spellcheck="false"></textarea>
+
+          <div class="admin-actions">
+            <button id="save-json" class="btn primary" type="button">Sauvegarder (local)</button>
+            <button id="reset-json" class="btn ghost" type="button">Annuler override</button>
+            <button id="download-json" class="btn ghost" type="button">Telecharger JSON</button>
+          </div>
+        </section>
       </div>
     </section>
   </main>
