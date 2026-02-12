@@ -25,7 +25,7 @@
     <section class="card admin-card" aria-labelledby="admin-title">
       <div class="admin-head">
         <h2 id="admin-title">Gestion rapide du contenu</h2>
-        <p class="muted">Ajoute ou modifie les infos du manga et des chapitres sans editer tout le JSON a la main.</p>
+        <p class="muted">Tout se fait ici sans editer le JSON. Ordre conseille: 1) dossier projet 2) upload chapitre 3) edition des pages via "Editer".</p>
       </div>
 
       <p id="admin-message" class="state-msg hidden" aria-live="polite"></p>
@@ -54,7 +54,11 @@
 
           <article class="admin-box">
             <h3>Nouveau chapitre</h3>
-            <p class="muted">Ajoute un chapitre en une seule fois: selectionne les images 01, 02, 03...</p>
+            <ol class="admin-steps muted">
+              <li>Choisir la racine du projet</li>
+              <li>Renseigner numero, titre, date</li>
+              <li>Selectionner toutes les pages puis ajouter</li>
+            </ol>
             <div class="admin-grid">
               <label for="upload-chapter-number">Numero chapitre</label>
               <input id="upload-chapter-number" type="number" min="1" step="1" placeholder="28">
@@ -94,7 +98,7 @@
 
         <section class="admin-editor-pane">
           <h3>Menu chapitres</h3>
-          <p class="muted">Editer ouvre la page dediee pour ajouter/supprimer les pages du chapitre.</p>
+          <p class="muted">Liste ordonnee du plus recent au plus ancien. Editer ouvre la gestion page par page.</p>
           <div id="chapter-manager-list" class="chapter-manager-list"></div>
         </section>
       </div>

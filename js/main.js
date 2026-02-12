@@ -12,6 +12,18 @@ let currentMode = 'scroll';
 let headerLastY = 0;
 let forceHideUi = false;
 
+function syncReaderHeaderVisibility() {
+  const headerEl = document.querySelector('#reader-header');
+  if (!headerEl) return;
+  if (forceHideUi) {
+    headerEl.classList.add('collapsed');
+    return;
+  }
+  if (currentMode === 'paged') {
+    headerEl.classList.remove('collapsed');
+  }
+}
+
 function stepSinglePage(direction) {
   if (!activeChapter) return;
   if (direction === 'next') {
@@ -392,6 +404,7 @@ function enableHeaderCollapse() {
 function setUiVisibilityHidden(hidden) {
   forceHideUi = hidden;
   document.body.classList.toggle('ui-forced-hidden', hidden);
+  syncReaderHeaderVisibility();
   const btn = document.querySelector('#ui-visibility-toggle');
   if (!btn) return;
   btn.classList.toggle('active', hidden);
@@ -550,6 +563,7 @@ function setReaderMode(mode) {
   if (currentMode === 'paged' && activeChapter) {
     updateSinglePage(activeChapter);
   }
+  syncReaderHeaderVisibility();
   refreshPagedNav();
 }
 

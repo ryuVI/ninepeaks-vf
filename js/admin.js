@@ -192,6 +192,18 @@ async function ensureSubDirectory(parentHandle, directoryName) {
   return parentHandle.getDirectoryHandle(directoryName, { create: true });
 }
 
+async function isProjectRootHandle(directoryHandle) {
+  if (!directoryHandle) return false;
+  try {
+    await directoryHandle.getFileHandle('index.html');
+    await directoryHandle.getDirectoryHandle('data');
+    await directoryHandle.getDirectoryHandle('mangas');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function writeFile(directoryHandle, fileName, data) {
   const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
   const writable = await fileHandle.createWritable();
@@ -239,8 +251,15 @@ function setupDirectUpload() {
 
   selectFolderBtn.addEventListener('click', async () => {
     try {
-      projectDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      setUploadStatus(`Dossier selectionne: ${projectDirectoryHandle.name}`);
+      const selectedHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      const isRoot = await isProjectRootHandle(selectedHandle);
+      if (!isRoot) {
+        projectDirectoryHandle = null;
+        setUploadStatus('Choisis la racine du projet (dossier avec index.html, data/ et mangas/).', true);
+        return;
+      }
+      projectDirectoryHandle = selectedHandle;
+      setUploadStatus(`Dossier projet valide: ${projectDirectoryHandle.name}`);
     } catch (error) {
       console.log('[debug] Selection dossier annulee:', error);
       setUploadStatus('Selection dossier annulee.', true);
