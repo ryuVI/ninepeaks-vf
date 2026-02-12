@@ -82,6 +82,30 @@
           </article>
 
           <article class="admin-box">
+            <h3>Upload rapide des images</h3>
+            <p class="muted">Selectionne le dossier du projet, puis envoie directement les pages du chapitre.</p>
+            <div class="admin-grid">
+              <label for="upload-chapter-number">Numero chapitre</label>
+              <input id="upload-chapter-number" type="number" min="1" step="1" placeholder="28">
+
+              <label for="upload-chapter-title">Titre chapitre</label>
+              <input id="upload-chapter-title" type="text" placeholder="Titre du chapitre">
+
+              <label for="upload-chapter-date">Date</label>
+              <input id="upload-chapter-date" type="date">
+
+              <label for="upload-chapter-files">Images pages (jpg/jpeg)</label>
+              <input id="upload-chapter-files" type="file" accept=".jpg,.jpeg,image/jpeg" multiple>
+            </div>
+
+            <div class="admin-actions">
+              <button id="select-project-folder" class="btn ghost" type="button">Choisir dossier projet</button>
+              <button id="upload-chapter-btn" class="btn primary" type="button">Uploader chapitre</button>
+            </div>
+            <p id="upload-status" class="muted">Aucun dossier selectionne.</p>
+          </article>
+
+          <article class="admin-box">
             <h3>Aide images</h3>
             <p class="muted">Convention: <code>01.jpg</code>, <code>02.jpg</code>, ... dans <code>mangas/nine-peaks/chapter-XX/</code>.</p>
             <p class="muted">Cover manga: <code>mangas/nine-peaks/cover.jpg</code></p>

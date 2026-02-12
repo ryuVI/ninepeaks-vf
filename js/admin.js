@@ -1,12 +1,21 @@
 const DATA_PATH = './data/chapters.json';
 const DATA_OVERRIDE_KEY = 'nine_peaks_data_override';
 
+let projectDirectoryHandle = null;
+
 function showMessage(id, text, isError = false) {
   const el = document.querySelector(id);
   if (!el) return;
   el.textContent = text;
   el.classList.remove('hidden');
   el.classList.toggle('error', isError);
+}
+
+function setUploadStatus(text, isError = false) {
+  const statusEl = document.querySelector('#upload-status');
+  if (!statusEl) return;
+  statusEl.textContent = text;
+  statusEl.classList.toggle('error', isError);
 }
 
 function parseJsonOrNull(raw) {
@@ -222,6 +231,145 @@ function setupQuickActions(editor) {
   }
 }
 
+function sanitizeUploadFiles(fileList) {
+  const files = Array.from(fileList || []);
+  const sorted = files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const invalid = sorted.find((file) => !/\.(jpe?g)$/i.test(file.name));
+  if (invalid) {
+    return {
+      ok: false,
+      message: `Format non supporte: ${invalid.name}. Utilise uniquement .jpg/.jpeg`
+    };
+  }
+  return { ok: true, files: sorted };
+}
+
+async function ensureSubDirectory(parentHandle, directoryName) {
+  return parentHandle.getDirectoryHandle(directoryName, { create: true });
+}
+
+async function writeFile(directoryHandle, fileName, data) {
+  const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(data);
+  await writable.close();
+}
+
+async function writeChapterImagesToProject(chapterNumber, files) {
+  const mangasDir = await ensureSubDirectory(projectDirectoryHandle, 'mangas');
+  const ninePeaksDir = await ensureSubDirectory(mangasDir, 'nine-peaks');
+  const chapterFolder = `chapter-${chapterNumber}`;
+  const chapterDir = await ensureSubDirectory(ninePeaksDir, chapterFolder);
+
+  for (let index = 0; index < files.length; index += 1) {
+    const pageNumber = String(index + 1).padStart(2, '0');
+    await writeFile(chapterDir, `${pageNumber}.jpg`, files[index]);
+  }
+
+  await writeFile(chapterDir, 'cover.jpg', files[0]);
+  return chapterFolder;
+}
+
+async function writeChaptersJsonToProject(data) {
+  const dataDir = await ensureSubDirectory(projectDirectoryHandle, 'data');
+  const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  await writeFile(dataDir, 'chapters.json', jsonBlob);
+}
+
+function setupDirectUpload(editor) {
+  const selectFolderBtn = document.querySelector('#select-project-folder');
+  const uploadBtn = document.querySelector('#upload-chapter-btn');
+  const numberInput = document.querySelector('#upload-chapter-number');
+  const titleInput = document.querySelector('#upload-chapter-title');
+  const dateInput = document.querySelector('#upload-chapter-date');
+  const filesInput = document.querySelector('#upload-chapter-files');
+
+  if (!selectFolderBtn || !uploadBtn || !numberInput || !titleInput || !dateInput || !filesInput) return;
+
+  if (!window.showDirectoryPicker) {
+    setUploadStatus('Ton navigateur ne supporte pas cet upload direct. Utilise Chrome ou Edge recent.', true);
+    selectFolderBtn.disabled = true;
+    uploadBtn.disabled = true;
+    return;
+  }
+
+  selectFolderBtn.addEventListener('click', async () => {
+    try {
+      projectDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      setUploadStatus(`Dossier selectionne: ${projectDirectoryHandle.name}`);
+    } catch (error) {
+      console.log('[debug] Selection dossier annulee:', error);
+      setUploadStatus('Selection dossier annulee.', true);
+    }
+  });
+
+  uploadBtn.addEventListener('click', async () => {
+    if (!projectDirectoryHandle) {
+      setUploadStatus('Choisis d abord le dossier de ton projet.', true);
+      return;
+    }
+
+    const chapterNumber = Number.parseInt(String(numberInput.value || ''), 10);
+    const chapterTitle = String(titleInput.value || '').trim();
+    const chapterDate = String(dateInput.value || '').trim();
+    const fileCheck = sanitizeUploadFiles(filesInput.files);
+
+    if (Number.isNaN(chapterNumber) || chapterNumber < 1) {
+      setUploadStatus('Numero de chapitre invalide.', true);
+      return;
+    }
+    if (!chapterTitle) {
+      setUploadStatus('Titre chapitre obligatoire.', true);
+      return;
+    }
+    if (!chapterDate) {
+      setUploadStatus('Date chapitre obligatoire.', true);
+      return;
+    }
+    if (!fileCheck.ok) {
+      setUploadStatus(fileCheck.message, true);
+      return;
+    }
+    if (!fileCheck.files.length) {
+      setUploadStatus('Ajoute au moins une image.', true);
+      return;
+    }
+
+    const data = readEditorData(editor);
+    if (!data) return;
+
+    try {
+      setUploadStatus('Upload en cours...');
+      const folder = await writeChapterImagesToProject(chapterNumber, fileCheck.files);
+      const chapterRecord = {
+        number: chapterNumber,
+        title: chapterTitle,
+        date: chapterDate,
+        pages: fileCheck.files.length,
+        folder,
+        cover: `mangas/nine-peaks/${folder}/cover.jpg`
+      };
+
+      const index = data.chapters.findIndex((chapter) => chapter.number === chapterNumber);
+      if (index >= 0) {
+        data.chapters[index] = chapterRecord;
+      } else {
+        data.chapters.push(chapterRecord);
+      }
+      data.chapters.sort((a, b) => a.number - b.number);
+
+      await writeChaptersJsonToProject(data);
+      writeEditorData(editor, data);
+
+      setUploadStatus(`Chapitre ${chapterNumber} upload avec ${fileCheck.files.length} pages.`);
+      showMessage('#admin-message', `Chapitre ${chapterNumber} ajoute et data/chapters.json mis a jour.`);
+    } catch (error) {
+      console.error('[debug] Erreur upload direct:', error);
+      setUploadStatus('Echec upload. Verifie permissions dossier et essaie encore.', true);
+    }
+  });
+}
+
 async function initAdminPage() {
   if (!window.Auth || !window.Auth.requireAdmin()) {
     return;
@@ -247,6 +395,7 @@ async function initAdminPage() {
   }
 
   setupQuickActions(editor);
+  setupDirectUpload(editor);
 
   saveBtn.addEventListener('click', () => {
     const parsed = readEditorData(editor);

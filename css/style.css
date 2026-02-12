@@ -528,6 +528,19 @@ a {
   font: inherit;
 }
 
+.admin-grid input[type="file"] {
+  padding: 0.45rem;
+}
+
+#upload-status {
+  margin: 0.6rem 0 0;
+  font-size: 0.9rem;
+}
+
+#upload-status.error {
+  color: #ff8e8e;
+}
+
 .input-textarea {
   min-height: 90px;
   resize: vertical;
