@@ -9,6 +9,7 @@ let activePage = 1;
 let currentZoom = 1;
 let currentMode = 'scroll';
 let headerLastY = 0;
+let forceHideUi = false;
 
 function getLocalDataOverride() {
   try {
@@ -322,6 +323,10 @@ function enableHeaderCollapse() {
   const headerEl = document.querySelector('#reader-header');
   if (!headerEl) return;
   window.addEventListener('scroll', () => {
+    if (forceHideUi) {
+      headerEl.classList.add('collapsed');
+      return;
+    }
     if (currentMode !== 'scroll') return;
     const currentY = window.scrollY;
     const scrollingDown = currentY > headerLastY;
@@ -331,6 +336,24 @@ function enableHeaderCollapse() {
       headerEl.classList.remove('collapsed');
     }
     headerLastY = currentY;
+  });
+}
+
+function setUiVisibilityHidden(hidden) {
+  forceHideUi = hidden;
+  document.body.classList.toggle('ui-forced-hidden', hidden);
+  const btn = document.querySelector('#ui-visibility-toggle');
+  if (!btn) return;
+  btn.classList.toggle('active', hidden);
+  btn.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+  btn.title = hidden ? 'Afficher l interface' : 'Masquer l interface';
+}
+
+function setupUiVisibilityToggle() {
+  const btn = document.querySelector('#ui-visibility-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    setUiVisibilityHidden(!forceHideUi);
   });
 }
 
@@ -463,10 +486,12 @@ function setupBookmarkButton() {
   if (!btn || !readerUser || !activeChapter) return;
 
   const user = getCurrentUserSafe();
+  const iconMode = btn.classList.contains('icon-square');
   if (!user) {
     readerUser.textContent = 'Connecte-toi pour les bookmarks';
-    btn.textContent = 'Connexion requise';
     btn.disabled = true;
+    btn.classList.remove('active');
+    btn.title = 'Connexion requise pour bookmark';
     return;
   }
 
@@ -475,10 +500,14 @@ function setupBookmarkButton() {
   function refreshLabel() {
     const bookmark = getChapterBookmark(activeChapter.number);
     if (!bookmark) {
-      btn.textContent = 'Ajouter bookmark';
+      btn.classList.remove('active');
+      btn.title = iconMode ? 'Ajouter bookmark' : 'Ajouter bookmark';
+      if (!iconMode) btn.textContent = 'Ajouter bookmark';
       return;
     }
-    btn.textContent = `Maj bookmark (p.${activePage})`;
+    btn.classList.add('active');
+    btn.title = `Bookmark actif page ${bookmark.page}`;
+    if (!iconMode) btn.textContent = `Maj bookmark (p.${activePage})`;
   }
 
   btn.disabled = false;
@@ -488,7 +517,9 @@ function setupBookmarkButton() {
     const existing = getChapterBookmark(activeChapter.number);
     if (existing && existing.page === activePage && existing.mode === currentMode) {
       removeBookmark(activeChapter.number);
-      btn.textContent = 'Ajouter bookmark';
+      btn.classList.remove('active');
+      btn.title = 'Ajouter bookmark';
+      if (!iconMode) btn.textContent = 'Ajouter bookmark';
       return;
     }
     upsertBookmark(activeChapter.number, activePage, currentMode);
@@ -644,6 +675,7 @@ async function initReaderPage() {
     setupZoomControls();
     setupModeControls();
     setupBookmarkButton();
+    setupUiVisibilityToggle();
     enableHeaderCollapse();
     hideReaderState();
   } catch (error) {

@@ -386,6 +386,12 @@ a {
   opacity: 0;
 }
 
+body.ui-forced-hidden #reader-header {
+  transform: translateY(-100%) !important;
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
 .reader-topbar {
   min-height: 74px;
   display: grid;
@@ -494,6 +500,30 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(14, 14, 20, 0.72);
   backdrop-filter: blur(10px);
+}
+
+.reader-side-dock {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 46;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.icon-square {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.18rem;
+  border-radius: 8px;
+}
+
+.icon-square.active {
+  border-color: rgba(0, 183, 255, 0.8);
+  background: rgba(0, 183, 255, 0.24);
 }
 
 .btn {

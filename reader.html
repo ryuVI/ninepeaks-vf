@@ -35,7 +35,6 @@
         <button id="zoom-in" class="btn ghost" type="button">+</button>
       </div>
       <div class="reader-account">
-        <button id="bookmark-toggle" class="btn primary" type="button">Ajouter bookmark</button>
         <span id="reader-user" class="muted"></span>
       </div>
     </div>
@@ -52,8 +51,13 @@
   </main>
 
   <div class="floating-nav" aria-label="Navigation rapide">
-    <button id="page-up" class="btn primary" type="button">Page precedente</button>
-    <button id="page-down" class="btn primary" type="button">Page suivante</button>
+    <button id="page-up" class="btn primary" type="button" aria-label="Page precedente">⬆</button>
+    <button id="page-down" class="btn primary" type="button" aria-label="Page suivante">⬇</button>
+  </div>
+
+  <div class="reader-side-dock" aria-label="Actions rapides">
+    <button id="bookmark-toggle" class="btn ghost icon-square" type="button" aria-label="Ajouter ou supprimer bookmark" title="Ajouter bookmark">🔖</button>
+    <button id="ui-visibility-toggle" class="btn ghost icon-square" type="button" aria-label="Masquer ou afficher l interface" title="Masquer l interface">👁️</button>
   </div>
 
   <script src="js/auth.js" defer></script>
