@@ -334,42 +334,21 @@
 
   async function login(usernameRaw, passwordRaw) {
     await ensureAdminBootstrapAccount();
+    // Desactive le verrouillage de tentatives pour laisser l'utilisateur reessayer librement.
+    localStorage.removeItem(ATTEMPTS_KEY);
     const username = normalizeUsername(usernameRaw);
     const password = String(passwordRaw || '');
-
-    const lock = checkUserLock(username);
-    if (lock.locked) {
-      return {
-        ok: false,
-        message: `Trop de tentatives. Reessaie dans ${lock.retryAfterSec}s.`,
-        retryAfterSec: lock.retryAfterSec
-      };
-    }
 
     const users = readUsers();
     const found = users.find((user) => user.username === username);
     if (!found) {
-      const fails = recordFailedLogin(username);
-      await delayForFailedAttempt(fails);
       return { ok: false, message: 'Compte introuvable. Inscris-toi d abord.' };
     }
 
     const passwordOk = await verifyPasswordAndMigrateIfNeeded(found, password, users);
     if (!passwordOk) {
-      const fails = recordFailedLogin(username);
-      await delayForFailedAttempt(fails);
-      const nextLock = checkUserLock(username);
-      if (nextLock.locked) {
-        return {
-          ok: false,
-          message: `Mot de passe incorrect. Compte bloque ${nextLock.retryAfterSec}s.`,
-          retryAfterSec: nextLock.retryAfterSec
-        };
-      }
       return { ok: false, message: 'Mot de passe incorrect.' };
     }
-
-    resetAttemptsForUser(username);
     setSession(username);
     return {
       ok: true,
