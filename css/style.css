@@ -114,10 +114,12 @@ a {
   overflow: hidden;
   background: #121212;
   border: 1px solid var(--border);
+  aspect-ratio: 500 / 349;
 }
 
 #manga-cover {
   width: 100%;
+  height: 100%;
   aspect-ratio: 500 / 349;
   object-fit: contain;
   background: #0d0d0d;
