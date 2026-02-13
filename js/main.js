@@ -4,6 +4,7 @@ const DATA_OVERRIDE_KEY = 'nine_peaks_data_override';
 const SITE_DATA_KEY = 'nine_peaks_site_data';
 const COMMENTS_KEY = 'nine_peaks_comments';
 const FORUM_KEY = 'nine_peaks_forum_messages';
+const FORUM_COOLDOWN_MS = 15000;
 
 let chaptersCache = [];
 let activeChapter = null;
@@ -114,6 +115,24 @@ function readForumMessages() {
 
 function saveForumMessages(messages) {
   localStorage.setItem(FORUM_KEY, JSON.stringify(messages));
+}
+
+function getForumCooldownKey(username) {
+  return `nine_peaks_forum_cooldown_${String(username || '').toLowerCase()}`;
+}
+
+function getForumCooldownRemaining(username) {
+  if (!username) return 0;
+  const raw = localStorage.getItem(getForumCooldownKey(username));
+  const lastSentAt = Number.parseInt(raw || '0', 10);
+  if (Number.isNaN(lastSentAt) || lastSentAt <= 0) return 0;
+  const remaining = FORUM_COOLDOWN_MS - (Date.now() - lastSentAt);
+  return Math.max(0, remaining);
+}
+
+function markForumMessageSent(username) {
+  if (!username) return;
+  localStorage.setItem(getForumCooldownKey(username), String(Date.now()));
 }
 
 function getLocalDataOverride() {
@@ -611,14 +630,28 @@ function setupForum() {
   if (!formEl || !inputEl || !submitEl || !userEl) return;
 
   const user = getCurrentUserSafe();
-  const authorName = user ? user.username : 'Invite';
+  const forumSection = document.querySelector('#forum-heading')?.closest('.chapter-section');
+  if (!user) {
+    if (forumSection) forumSection.classList.add('hidden');
+    return;
+  }
+  if (forumSection) forumSection.classList.remove('hidden');
+
+  const authorName = user.username;
   renderForum();
   submitEl.disabled = false;
-  userEl.textContent = user ? `Connecte: ${user.username}` : 'Mode invite: message autorise';
+  userEl.textContent = `Connecte: ${user.username}`;
   formEl.addEventListener('submit', (event) => {
     event.preventDefault();
     const content = String(inputEl.value || '').trim();
     if (!content || content.length > 800) return;
+
+    const remainingMs = getForumCooldownRemaining(authorName);
+    if (remainingMs > 0) {
+      userEl.textContent = `Attends ${Math.ceil(remainingMs / 1000)}s avant un nouveau message`;
+      return;
+    }
+
     const next = readForumMessages();
     next.push({
       id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -627,7 +660,9 @@ function setupForum() {
       createdAt: new Date().toISOString()
     });
     saveForumMessages(next);
+    markForumMessageSent(authorName);
     inputEl.value = '';
+    userEl.textContent = `Connecte: ${user.username}`;
     renderForum();
   });
 }
