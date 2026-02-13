@@ -430,9 +430,14 @@ a {
 }
 
 .reader-progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
   height: 4px;
   width: 100%;
   background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
 .reader-progress-bar {
