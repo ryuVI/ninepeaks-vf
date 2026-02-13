@@ -12,6 +12,7 @@ let currentZoom = 1;
 let currentMode = 'scroll';
 let headerLastY = 0;
 let forceHideUi = false;
+let resizeRafId = null;
 
 function getReaderContentWidth() {
   const raw = getComputedStyle(document.documentElement).getPropertyValue('--reader-content-width').trim();
@@ -19,8 +20,8 @@ function getReaderContentWidth() {
   return Number.isNaN(parsed) ? 780 : parsed;
 }
 
-function applyImageSizing() {
-  const images = document.querySelectorAll('.page-image');
+function applyImageSizing(targetImage = null) {
+  const images = targetImage ? [targetImage] : document.querySelectorAll('.page-image');
   const baseWidth = getReaderContentWidth();
   images.forEach((image) => {
     const naturalWidth = Number(image.dataset.naturalWidth || image.naturalWidth || 0);
@@ -360,12 +361,14 @@ function renderChapterList(chapters) {
   }
   emptyEl.classList.add('hidden');
 
+  const fragment = document.createDocumentFragment();
   chapters
     .slice()
     .sort((a, b) => b.number - a.number)
     .forEach((chapter) => {
-      listEl.appendChild(createChapterCard(chapter));
+      fragment.appendChild(createChapterCard(chapter));
     });
+  listEl.appendChild(fragment);
 }
 
 function renderChapterMenu(chapters) {
@@ -423,7 +426,9 @@ function updatePageCounter(current, total) {
 function enableHeaderCollapse() {
   const headerEl = document.querySelector('#reader-header');
   if (!headerEl) return;
-  window.addEventListener('scroll', () => {
+  let ticking = false;
+  const onScroll = () => {
+    ticking = false;
     if (forceHideUi) {
       headerEl.classList.add('collapsed');
       return;
@@ -437,7 +442,13 @@ function enableHeaderCollapse() {
       headerEl.classList.remove('collapsed');
     }
     headerLastY = currentY;
-  });
+  };
+
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(onScroll);
+  }, { passive: true });
 }
 
 function setUiVisibilityHidden(hidden) {
@@ -643,6 +654,19 @@ function setZoom(nextZoom) {
   const label = document.querySelector('#zoom-level');
   if (label) label.textContent = `${Math.round(clamped * 100)}%`;
   applyImageSizing();
+}
+
+function setupReaderResizeHandling() {
+  if (document.body.dataset.page !== 'reader') return;
+  window.addEventListener('resize', () => {
+    if (resizeRafId) {
+      window.cancelAnimationFrame(resizeRafId);
+    }
+    resizeRafId = window.requestAnimationFrame(() => {
+      applyImageSizing();
+      resizeRafId = null;
+    });
+  }, { passive: true });
 }
 
 function updateSinglePage(chapter) {
@@ -866,6 +890,7 @@ function renderReaderPages(chapter) {
   const pagesContainer = document.querySelector('#reader-pages');
   if (!pagesContainer) return;
   pagesContainer.innerHTML = '';
+  const fragment = document.createDocumentFragment();
 
   for (let pageIndex = 1; pageIndex <= chapter.pages; pageIndex += 1) {
     const figure = document.createElement('figure');
@@ -880,7 +905,7 @@ function renderReaderPages(chapter) {
     image.src = buildImagePath(chapter, pageIndex);
     image.addEventListener('load', () => {
       image.dataset.naturalWidth = String(image.naturalWidth || 0);
-      applyImageSizing();
+      applyImageSizing(image);
     });
     image.addEventListener('error', () => {
       console.log('[debug] Image manquante:', image.src);
@@ -891,8 +916,9 @@ function renderReaderPages(chapter) {
     });
 
     figure.appendChild(image);
-    pagesContainer.appendChild(figure);
+    fragment.appendChild(figure);
   }
+  pagesContainer.appendChild(fragment);
 
   observePages(chapter.pages);
   updatePageCounter(activePage, chapter.pages);
@@ -975,6 +1001,7 @@ function init() {
   }
   if (page === 'index') initIndexPage();
   if (page === 'reader') initReaderPage();
+  setupReaderResizeHandling();
 }
 
 document.addEventListener('DOMContentLoaded', init);

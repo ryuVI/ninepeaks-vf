@@ -321,6 +321,8 @@ a {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   animation: fade-up 0.5s ease both;
+  content-visibility: auto;
+  contain-intrinsic-size: 260px;
 }
 
 .chapter-card::before {
@@ -554,6 +556,8 @@ body.ui-forced-hidden #reader-header {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
   padding: 0.7rem;
+  content-visibility: auto;
+  contain-intrinsic-size: 110px;
 }
 
 .comment-meta {
@@ -585,6 +589,8 @@ body.ui-forced-hidden #reader-header {
   display: flex;
   justify-content: center;
   transition: border-color var(--transition), box-shadow var(--transition);
+  content-visibility: auto;
+  contain-intrinsic-size: 1200px;
 }
 
 .page-frame:hover {
