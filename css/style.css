@@ -632,17 +632,37 @@ body.ui-forced-hidden #reader-header {
   gap: 0.55rem;
 }
 
-.icon-square {
-  width: 46px;
-  height: 46px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  font-size: 1.18rem;
-  border-radius: 8px;
+.dock-btn {
+  min-width: 118px;
+  padding: 0.5rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.46rem;
+  justify-content: flex-start;
 }
 
-.icon-square.active {
+.dock-icon {
+  font-size: 1.06rem;
+  line-height: 1;
+}
+
+.dock-text {
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.dock-hint {
+  margin: 0;
+  width: 170px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+}
+
+.dock-btn.active {
   border-color: rgba(0, 183, 255, 0.8);
   background: rgba(0, 183, 255, 0.24);
 }
@@ -990,6 +1010,10 @@ body.ui-forced-hidden #reader-header {
 
   .reader-account {
     justify-content: flex-end;
+  }
+
+  .dock-hint {
+    width: 210px;
   }
 
   .auth-grid {

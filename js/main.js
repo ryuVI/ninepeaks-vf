@@ -460,6 +460,10 @@ function setUiVisibilityHidden(hidden) {
   btn.classList.toggle('active', hidden);
   btn.setAttribute('aria-pressed', hidden ? 'true' : 'false');
   btn.title = hidden ? 'Afficher l interface' : 'Masquer l interface';
+  const label = btn.querySelector('.dock-text');
+  const icon = btn.querySelector('.dock-icon');
+  if (label) label.textContent = hidden ? 'Afficher UI' : 'Masquer UI';
+  if (icon) icon.textContent = hidden ? '🙈' : '👁️';
 }
 
 function setupUiVisibilityToggle() {
@@ -780,13 +784,43 @@ function setupModeControls() {
   pagedBtn?.addEventListener('click', () => setReaderMode('scroll'));
 }
 
+function setupFullscreenToggle() {
+  const btn = document.querySelector('#fullscreen-toggle');
+  if (!btn) return;
+
+  function refreshFullscreenState() {
+    const isFullscreen = Boolean(document.fullscreenElement);
+    btn.classList.toggle('active', isFullscreen);
+    btn.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
+    btn.title = isFullscreen ? 'Quitter le plein ecran' : 'Activer le plein ecran';
+    const label = btn.querySelector('.dock-text');
+    const icon = btn.querySelector('.dock-icon');
+    if (label) label.textContent = isFullscreen ? 'Quitter ecran' : 'Plein ecran';
+    if (icon) icon.textContent = isFullscreen ? '🗗' : '⛶';
+  }
+
+  btn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.log('[debug] fullscreen error:', error);
+    }
+  });
+
+  document.addEventListener('fullscreenchange', refreshFullscreenState);
+  refreshFullscreenState();
+}
+
 function setupBookmarkButton() {
   const btn = document.querySelector('#bookmark-toggle');
   const readerUser = document.querySelector('#reader-user');
   if (!btn || !readerUser || !activeChapter) return;
 
   const user = getCurrentUserSafe();
-  const iconMode = btn.classList.contains('icon-square');
   if (!user) {
     readerUser.textContent = 'Connecte-toi pour les bookmarks';
     btn.disabled = true;
@@ -799,15 +833,16 @@ function setupBookmarkButton() {
 
   function refreshLabel() {
     const bookmark = getChapterBookmark(activeChapter.number);
+    const label = btn.querySelector('.dock-text');
     if (!bookmark) {
       btn.classList.remove('active');
-      btn.title = iconMode ? 'Ajouter bookmark' : 'Ajouter bookmark';
-      if (!iconMode) btn.textContent = 'Ajouter bookmark';
+      btn.title = 'Ajouter bookmark';
+      if (label) label.textContent = 'Signet';
       return;
     }
     btn.classList.add('active');
     btn.title = `Bookmark actif page ${bookmark.page}`;
-    if (!iconMode) btn.textContent = `Maj bookmark (p.${activePage})`;
+    if (label) label.textContent = `Signet p.${bookmark.page}`;
   }
 
   btn.disabled = false;
@@ -819,7 +854,8 @@ function setupBookmarkButton() {
       removeBookmark(activeChapter.number);
       btn.classList.remove('active');
       btn.title = 'Ajouter bookmark';
-      if (!iconMode) btn.textContent = 'Ajouter bookmark';
+      const label = btn.querySelector('.dock-text');
+      if (label) label.textContent = 'Signet';
       return;
     }
     upsertBookmark(activeChapter.number, activePage, currentMode);
@@ -985,6 +1021,7 @@ async function initReaderPage() {
     setupBookmarkButton();
     setupComments(activeChapter.number);
     setupUiVisibilityToggle();
+    setupFullscreenToggle();
     enableHeaderCollapse();
     hideReaderState();
   } catch (error) {
