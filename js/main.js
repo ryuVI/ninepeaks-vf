@@ -5,6 +5,7 @@ const SITE_DATA_KEY = 'nine_peaks_site_data';
 const COMMENTS_KEY = 'nine_peaks_comments';
 const FORUM_KEY = 'nine_peaks_forum_messages';
 const FORUM_COOLDOWN_MS = 15000;
+const READER_PROGRESS_KEY_PREFIX = 'nine_peaks_reader_progress_';
 
 let chaptersCache = [];
 let activeChapter = null;
@@ -14,11 +15,36 @@ let currentMode = 'scroll';
 let headerLastY = 0;
 let forceHideUi = false;
 let resizeRafId = null;
+let toastTimeoutId = null;
 
 function getReaderContentWidth() {
   const raw = getComputedStyle(document.documentElement).getPropertyValue('--reader-content-width').trim();
   const parsed = Number.parseInt(raw, 10);
   return Number.isNaN(parsed) ? 780 : parsed;
+}
+
+function getToastContainer() {
+  let container = document.querySelector('#toast-stack');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-stack';
+    container.className = 'toast-stack';
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+function showToast(message, type = 'info') {
+  const container = getToastContainer();
+  container.innerHTML = '';
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  if (toastTimeoutId) window.clearTimeout(toastTimeoutId);
+  toastTimeoutId = window.setTimeout(() => {
+    if (toast.parentElement) toast.remove();
+  }, 2200);
 }
 
 function applyImageSizing(targetImage = null) {
@@ -170,6 +196,44 @@ function getBookmarksKey() {
   const user = getCurrentUserSafe();
   if (!user) return null;
   return `nine_peaks_bookmarks_${user.username}`;
+}
+
+function getReaderProgressKey() {
+  const user = getCurrentUserSafe();
+  const scope = user ? user.username : 'guest';
+  return `${READER_PROGRESS_KEY_PREFIX}${scope}`;
+}
+
+function readReaderProgress() {
+  try {
+    const raw = localStorage.getItem(getReaderProgressKey());
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveReaderProgress(chapterNumber, page) {
+  try {
+    const store = readReaderProgress();
+    store[String(chapterNumber)] = {
+      page,
+      updatedAt: Date.now()
+    };
+    localStorage.setItem(getReaderProgressKey(), JSON.stringify(store));
+  } catch {
+    // ignore localStorage failures
+  }
+}
+
+function getSavedReaderPage(chapterNumber) {
+  const store = readReaderProgress();
+  const found = store[String(chapterNumber)];
+  if (!found || typeof found !== 'object') return null;
+  const page = Number.parseInt(String(found.page), 10);
+  return Number.isNaN(page) ? null : page;
 }
 
 function readBookmarks() {
@@ -424,10 +488,12 @@ function parseReaderParams() {
   const params = new URLSearchParams(window.location.search);
   const chapter = Number.parseInt(params.get('chapter'), 10);
   const page = Number.parseInt(params.get('page'), 10);
+  const hasExplicitPage = params.has('page');
   return {
     chapter: Number.isNaN(chapter) ? null : chapter,
     page: Number.isNaN(page) ? 1 : page,
-    mode: 'scroll'
+    mode: 'scroll',
+    hasExplicitPage
   };
 }
 
@@ -578,6 +644,7 @@ function setupComments(chapterNumber) {
     });
     setChapterComments(chapterNumber, next);
     inputEl.value = '';
+    showToast('Commentaire publie', 'success');
     renderComments(chapterNumber);
   });
 }
@@ -649,6 +716,7 @@ function setupForum() {
     const remainingMs = getForumCooldownRemaining(authorName);
     if (remainingMs > 0) {
       userEl.textContent = `Attends ${Math.ceil(remainingMs / 1000)}s avant un nouveau message`;
+      showToast('Cooldown actif pour le forum', 'warning');
       return;
     }
 
@@ -663,6 +731,7 @@ function setupForum() {
     markForumMessageSent(authorName);
     inputEl.value = '';
     userEl.textContent = `Connecte: ${user.username}`;
+    showToast('Message forum envoye', 'success');
     renderForum();
   });
 }
@@ -682,6 +751,14 @@ function setZoom(nextZoom) {
   const label = document.querySelector('#zoom-level');
   if (label) label.textContent = `${Math.round(clamped * 100)}%`;
   applyImageSizing();
+}
+
+function setupReaderTapZones() {
+  const zoneUp = document.querySelector('#tap-zone-up');
+  const zoneDown = document.querySelector('#tap-zone-down');
+  if (!zoneUp || !zoneDown) return;
+  zoneUp.addEventListener('click', () => scrollByViewport('up'));
+  zoneDown.addEventListener('click', () => scrollByViewport('down'));
 }
 
 function setupReaderResizeHandling() {
@@ -880,9 +957,11 @@ function setupBookmarkButton() {
       btn.title = 'Ajouter bookmark';
       const label = btn.querySelector('.dock-text');
       if (label) label.textContent = 'Signet';
+      showToast('Signet supprime', 'info');
       return;
     }
     upsertBookmark(activeChapter.number, activePage, currentMode);
+    showToast(`Signet enregistre p.${activePage}`, 'success');
     refreshLabel();
   });
 }
@@ -937,6 +1016,7 @@ function observePages(totalPages) {
           if (!Number.isNaN(page)) {
             activePage = page;
             updatePageCounter(activePage, totalPages);
+            if (activeChapter) saveReaderProgress(activeChapter.number, activePage);
           }
         }
       });
@@ -1028,9 +1108,14 @@ async function initReaderPage() {
     }
 
     activeChapter = chapters[chapterIndex];
-    activePage = Math.min(Math.max(params.page, 1), activeChapter.pages);
+    const savedPage = params.hasExplicitPage ? null : getSavedReaderPage(activeChapter.number);
+    const preferredPage = savedPage || params.page;
+    activePage = Math.min(Math.max(preferredPage, 1), activeChapter.pages);
     currentMode = params.mode;
     console.log('[debug] Chapitre actif:', activeChapter, 'mode:', currentMode);
+    if (savedPage && !params.hasExplicitPage) {
+      showToast(`Reprise a la page ${activePage}`, 'info');
+    }
 
     setReaderTitle(activeChapter);
     setupChapterButtons(chapters, chapterIndex);
@@ -1045,6 +1130,7 @@ async function initReaderPage() {
     setupBookmarkButton();
     setupComments(activeChapter.number);
     setupUiVisibilityToggle();
+    setupReaderTapZones();
     setupFullscreenToggle();
     enableHeaderCollapse();
     hideReaderState();

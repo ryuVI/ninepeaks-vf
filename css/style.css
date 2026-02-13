@@ -506,6 +506,58 @@ body.ui-forced-hidden .reader-side-dock .ui-toggle-btn .dock-text {
 
 .reader-main {
   padding: 0.5rem 0 7rem;
+  position: relative;
+}
+
+.reader-tap-zones {
+  position: fixed;
+  right: 0.35rem;
+  top: 42%;
+  transform: translateY(-50%);
+  z-index: 30;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.tap-zone {
+  width: 34px;
+  height: 72px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.tap-zone::before {
+  content: '⇅';
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.86rem;
+}
+
+.toast-stack {
+  position: fixed;
+  left: 50%;
+  top: 1rem;
+  transform: translateX(-50%);
+  z-index: 80;
+  pointer-events: none;
+}
+
+.toast {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.72rem;
+  color: var(--text-main);
+  background: rgba(12, 12, 18, 0.92);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  font-size: 0.84rem;
+}
+
+.toast-success {
+  border-color: rgba(0, 183, 255, 0.55);
+}
+
+.toast-warning {
+  border-color: rgba(255, 173, 0, 0.6);
 }
 
 .reader-pages {
@@ -1066,6 +1118,10 @@ body.ui-forced-hidden .reader-side-dock .ui-toggle-btn .dock-text {
 @media (min-width: 980px) {
   .chapter-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reader-tap-zones {
+    display: none;
   }
 
   .reader-side-dock {

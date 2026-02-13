@@ -40,6 +40,10 @@
   </header>
 
   <main class="reader-main" aria-live="polite">
+    <div id="reader-tap-zones" class="reader-tap-zones" aria-hidden="true">
+      <button id="tap-zone-up" class="tap-zone" type="button" tabindex="-1"></button>
+      <button id="tap-zone-down" class="tap-zone" type="button" tabindex="-1"></button>
+    </div>
     <section id="reader-state" class="container state-msg">Chargement du lecteur...</section>
     <section id="reader-pages" class="reader-pages" aria-label="Pages du chapitre"></section>
 
