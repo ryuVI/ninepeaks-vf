@@ -7,6 +7,9 @@
   const LEGACY_ADMIN_SESSION_KEY = 'nine_peaks_admin_session';
   const ATTEMPTS_KEY = 'nine_peaks_auth_attempts';
   const API_BASE_URL = 'http://localhost:4000/api';
+  let backendAvailabilityCache = null;
+  let backendAvailabilityTs = 0;
+  const BACKEND_CACHE_TTL_MS = 15000;
 
   const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
   const ADMIN_USERNAMES = ['pcatv'];
@@ -240,12 +243,24 @@
   }
 
   async function isBackendAvailable() {
+    const now = Date.now();
+    if (backendAvailabilityCache !== null && now - backendAvailabilityTs < BACKEND_CACHE_TTL_MS) {
+      return backendAvailabilityCache;
+    }
     try {
       const response = await fetch(`${API_BASE_URL}/health`, { method: 'GET' });
+      backendAvailabilityCache = response.ok;
+      backendAvailabilityTs = now;
       return response.ok;
     } catch {
+      backendAvailabilityCache = false;
+      backendAvailabilityTs = now;
       return false;
     }
+  }
+
+  async function callApi(path, options = {}) {
+    return apiRequest(path, options);
   }
 
   function buildSessionFingerprintSync(username) {
@@ -477,6 +492,8 @@
     logout,
     getCurrentUser,
     isLoggedIn: () => Boolean(getCurrentUser()),
-    requireAdmin
+    requireAdmin,
+    callApi,
+    isBackendAvailable
   };
 })();

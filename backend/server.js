@@ -15,6 +15,7 @@ const SESSION_DAYS = Number.parseInt(process.env.SESSION_DAYS || '7', 10);
 const SESSION_SECONDS = SESSION_DAYS * 24 * 60 * 60;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 const ADMIN_USERNAMES = new Set(['pcatv']);
+const FORUM_COOLDOWN_MS = 15000;
 
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
@@ -41,6 +42,15 @@ function get(sql, params = []) {
   });
 }
 
+function all(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(Array.isArray(rows) ? rows : []);
+    });
+  });
+}
+
 async function initDb() {
   await run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -48,6 +58,43 @@ async function initDb() {
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       created_at TEXT NOT NULL
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id TEXT PRIMARY KEY,
+      chapter_number INTEGER NOT NULL,
+      author TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS forum_messages (
+      id TEXT PRIMARY KEY,
+      author TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS bookmarks (
+      username TEXT PRIMARY KEY,
+      payload_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
+
+  await run(`
+    CREATE TABLE IF NOT EXISTS reader_progress (
+      username TEXT NOT NULL,
+      chapter_number INTEGER NOT NULL,
+      page INTEGER NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (username, chapter_number)
     )
   `);
 }
@@ -88,9 +135,10 @@ function authRequired(req, res, next) {
   const token = authHeader.slice('Bearer '.length);
   try {
     const payload = jwt.verify(token, JWT_SECRET);
+    const username = normalizeUsername(payload.username);
     req.user = {
-      username: normalizeUsername(payload.username),
-      isAdmin: ADMIN_USERNAMES.has(normalizeUsername(payload.username))
+      username,
+      isAdmin: ADMIN_USERNAMES.has(username)
     };
     next();
   } catch {
@@ -98,14 +146,22 @@ function authRequired(req, res, next) {
   }
 }
 
+function adminRequired(req, res, next) {
+  if (!req.user?.isAdmin) {
+    res.status(403).json({ ok: false, message: 'Droits admin requis.' });
+    return;
+  }
+  next();
+}
+
 const app = express();
 app.use(helmet());
 app.use(cors({ origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN, credentials: false }));
-app.use(express.json({ limit: '256kb' }));
+app.use(express.json({ limit: '512kb' }));
 
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 80,
+  max: 120,
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -113,7 +169,7 @@ app.use(globalLimiter);
 
 const authLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 20,
+  max: 25,
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -136,13 +192,11 @@ app.post('/api/auth/signup', authLimiter, async (req, res) => {
       res.status(400).json({ ok: false, message: passwordError });
       return;
     }
-
     const existing = await get('SELECT id FROM users WHERE username = ?', [username]);
     if (existing) {
       res.status(409).json({ ok: false, message: 'Ce nom utilisateur existe deja.' });
       return;
     }
-
     const hash = await bcrypt.hash(password, 12);
     await run(
       'INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)',
@@ -193,6 +247,246 @@ app.get('/api/auth/me', authRequired, (req, res) => {
       isAdmin: req.user.isAdmin
     }
   });
+});
+
+app.get('/api/comments/:chapter', async (req, res) => {
+  try {
+    const chapter = Number.parseInt(req.params.chapter, 10);
+    if (Number.isNaN(chapter) || chapter < 1) {
+      res.status(400).json({ ok: false, message: 'Chapitre invalide.' });
+      return;
+    }
+    const rows = await all(
+      'SELECT id, author, content, created_at AS createdAt FROM comments WHERE chapter_number = ? ORDER BY created_at DESC',
+      [chapter]
+    );
+    res.json({ ok: true, comments: rows });
+  } catch (error) {
+    console.error('[api] comments list error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.post('/api/comments/:chapter', authRequired, async (req, res) => {
+  try {
+    const chapter = Number.parseInt(req.params.chapter, 10);
+    const content = String(req.body?.content || '').trim();
+    if (Number.isNaN(chapter) || chapter < 1) {
+      res.status(400).json({ ok: false, message: 'Chapitre invalide.' });
+      return;
+    }
+    if (!content || content.length > 800) {
+      res.status(400).json({ ok: false, message: 'Contenu invalide.' });
+      return;
+    }
+    const id = `c_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const createdAt = new Date().toISOString();
+    await run(
+      'INSERT INTO comments (id, chapter_number, author, content, created_at) VALUES (?, ?, ?, ?, ?)',
+      [id, chapter, req.user.username, content, createdAt]
+    );
+    res.json({ ok: true, comment: { id, author: req.user.username, content, createdAt } });
+  } catch (error) {
+    console.error('[api] comments create error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.delete('/api/comments/:id', authRequired, async (req, res) => {
+  try {
+    const id = String(req.params.id || '').trim();
+    const row = await get('SELECT id, author FROM comments WHERE id = ?', [id]);
+    if (!row) {
+      res.status(404).json({ ok: false, message: 'Commentaire introuvable.' });
+      return;
+    }
+    if (!req.user.isAdmin && row.author !== req.user.username) {
+      res.status(403).json({ ok: false, message: 'Suppression non autorisee.' });
+      return;
+    }
+    await run('DELETE FROM comments WHERE id = ?', [id]);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('[api] comments delete error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.get('/api/forum', async (_req, res) => {
+  try {
+    const rows = await all(
+      'SELECT id, author, content, created_at AS createdAt FROM forum_messages ORDER BY created_at DESC LIMIT 300'
+    );
+    res.json({ ok: true, messages: rows });
+  } catch (error) {
+    console.error('[api] forum list error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.post('/api/forum', authRequired, async (req, res) => {
+  try {
+    const content = String(req.body?.content || '').trim();
+    if (!content || content.length > 800) {
+      res.status(400).json({ ok: false, message: 'Contenu invalide.' });
+      return;
+    }
+
+    const last = await get(
+      'SELECT created_at FROM forum_messages WHERE author = ? ORDER BY created_at DESC LIMIT 1',
+      [req.user.username]
+    );
+    if (last) {
+      const remaining = FORUM_COOLDOWN_MS - (Date.now() - new Date(last.created_at).getTime());
+      if (remaining > 0) {
+        res.status(429).json({
+          ok: false,
+          message: `Attends ${Math.ceil(remaining / 1000)}s avant un nouveau message`
+        });
+        return;
+      }
+    }
+
+    const id = `f_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const createdAt = new Date().toISOString();
+    await run(
+      'INSERT INTO forum_messages (id, author, content, created_at) VALUES (?, ?, ?, ?)',
+      [id, req.user.username, content, createdAt]
+    );
+    res.json({ ok: true, message: { id, author: req.user.username, content, createdAt } });
+  } catch (error) {
+    console.error('[api] forum create error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.delete('/api/forum/:id', authRequired, async (req, res) => {
+  try {
+    const id = String(req.params.id || '').trim();
+    const row = await get('SELECT id, author FROM forum_messages WHERE id = ?', [id]);
+    if (!row) {
+      res.status(404).json({ ok: false, message: 'Message introuvable.' });
+      return;
+    }
+    if (!req.user.isAdmin && row.author !== req.user.username) {
+      res.status(403).json({ ok: false, message: 'Suppression non autorisee.' });
+      return;
+    }
+    await run('DELETE FROM forum_messages WHERE id = ?', [id]);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('[api] forum delete error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.get('/api/bookmarks', authRequired, async (req, res) => {
+  try {
+    const row = await get('SELECT payload_json FROM bookmarks WHERE username = ?', [req.user.username]);
+    const bookmarks = row ? JSON.parse(row.payload_json || '[]') : [];
+    res.json({ ok: true, bookmarks: Array.isArray(bookmarks) ? bookmarks : [] });
+  } catch (error) {
+    console.error('[api] bookmarks get error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.put('/api/bookmarks', authRequired, async (req, res) => {
+  try {
+    const bookmarks = Array.isArray(req.body?.bookmarks) ? req.body.bookmarks : [];
+    await run(
+      `
+      INSERT INTO bookmarks (username, payload_json, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(username) DO UPDATE SET
+        payload_json=excluded.payload_json,
+        updated_at=excluded.updated_at
+      `,
+      [req.user.username, JSON.stringify(bookmarks), new Date().toISOString()]
+    );
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('[api] bookmarks put error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.get('/api/progress/:chapter', authRequired, async (req, res) => {
+  try {
+    const chapter = Number.parseInt(req.params.chapter, 10);
+    if (Number.isNaN(chapter) || chapter < 1) {
+      res.status(400).json({ ok: false, message: 'Chapitre invalide.' });
+      return;
+    }
+    const row = await get(
+      'SELECT page FROM reader_progress WHERE username = ? AND chapter_number = ?',
+      [req.user.username, chapter]
+    );
+    res.json({ ok: true, page: row ? Number(row.page || 1) : null });
+  } catch (error) {
+    console.error('[api] progress get error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.put('/api/progress/:chapter', authRequired, async (req, res) => {
+  try {
+    const chapter = Number.parseInt(req.params.chapter, 10);
+    const page = Number.parseInt(req.body?.page, 10);
+    if (Number.isNaN(chapter) || chapter < 1 || Number.isNaN(page) || page < 1) {
+      res.status(400).json({ ok: false, message: 'Parametres invalides.' });
+      return;
+    }
+    await run(
+      `
+      INSERT INTO reader_progress (username, chapter_number, page, updated_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(username, chapter_number) DO UPDATE SET
+        page=excluded.page,
+        updated_at=excluded.updated_at
+      `,
+      [req.user.username, chapter, page, new Date().toISOString()]
+    );
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('[api] progress put error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.get('/api/mod/overview', authRequired, adminRequired, async (_req, res) => {
+  try {
+    const comments = await all(
+      'SELECT id, chapter_number AS chapterNumber, author, content, created_at AS createdAt FROM comments ORDER BY created_at DESC LIMIT 100'
+    );
+    const forum = await all(
+      'SELECT id, author, content, created_at AS createdAt FROM forum_messages ORDER BY created_at DESC LIMIT 100'
+    );
+    res.json({ ok: true, comments, forum });
+  } catch (error) {
+    console.error('[api] mod overview error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.delete('/api/mod/comment/:id', authRequired, adminRequired, async (req, res) => {
+  try {
+    await run('DELETE FROM comments WHERE id = ?', [String(req.params.id || '')]);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('[api] mod comment delete error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
+});
+
+app.delete('/api/mod/forum/:id', authRequired, adminRequired, async (req, res) => {
+  try {
+    await run('DELETE FROM forum_messages WHERE id = ?', [String(req.params.id || '')]);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('[api] mod forum delete error:', error);
+    res.status(500).json({ ok: false, message: 'Erreur serveur.' });
+  }
 });
 
 initDb()

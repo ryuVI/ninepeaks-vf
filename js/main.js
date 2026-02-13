@@ -16,6 +16,11 @@ let headerLastY = 0;
 let forceHideUi = false;
 let resizeRafId = null;
 let toastTimeoutId = null;
+let backendReady = false;
+let commentsCache = {};
+let forumCache = [];
+let bookmarksCache = [];
+let progressCache = {};
 
 function getReaderContentWidth() {
   const raw = getComputedStyle(document.documentElement).getPropertyValue('--reader-content-width').trim();
@@ -67,6 +72,12 @@ function clearLegacyDataOverrides() {
   }
 }
 
+async function ensureBackendReady() {
+  if (!window.Auth || typeof window.Auth.isBackendAvailable !== 'function') return false;
+  backendReady = await window.Auth.isBackendAvailable();
+  return backendReady;
+}
+
 function syncReaderHeaderVisibility() {
   const headerEl = document.querySelector('#reader-header');
   if (!headerEl) return;
@@ -102,6 +113,7 @@ function refreshPagedNav() {
 }
 
 function readCommentsStore() {
+  if (backendReady) return commentsCache;
   try {
     const raw = localStorage.getItem(COMMENTS_KEY);
     if (!raw) return {};
@@ -113,6 +125,8 @@ function readCommentsStore() {
 }
 
 function saveCommentsStore(store) {
+  commentsCache = store;
+  if (backendReady) return;
   localStorage.setItem(COMMENTS_KEY, JSON.stringify(store));
 }
 
@@ -129,6 +143,7 @@ function setChapterComments(chapterNumber, comments) {
 }
 
 function readForumMessages() {
+  if (backendReady) return forumCache;
   try {
     const raw = localStorage.getItem(FORUM_KEY);
     if (!raw) return [];
@@ -140,6 +155,8 @@ function readForumMessages() {
 }
 
 function saveForumMessages(messages) {
+  forumCache = messages;
+  if (backendReady) return;
   localStorage.setItem(FORUM_KEY, JSON.stringify(messages));
 }
 
@@ -205,6 +222,7 @@ function getReaderProgressKey() {
 }
 
 function readReaderProgress() {
+  if (backendReady && getCurrentUserSafe()) return progressCache;
   try {
     const raw = localStorage.getItem(getReaderProgressKey());
     if (!raw) return {};
@@ -216,12 +234,17 @@ function readReaderProgress() {
 }
 
 function saveReaderProgress(chapterNumber, page) {
+  const store = readReaderProgress();
+  store[String(chapterNumber)] = {
+    page,
+    updatedAt: Date.now()
+  };
+  progressCache = store;
+  if (backendReady && getCurrentUserSafe()) {
+    persistProgressRemote(chapterNumber, page);
+    return;
+  }
   try {
-    const store = readReaderProgress();
-    store[String(chapterNumber)] = {
-      page,
-      updatedAt: Date.now()
-    };
     localStorage.setItem(getReaderProgressKey(), JSON.stringify(store));
   } catch {
     // ignore localStorage failures
@@ -237,6 +260,7 @@ function getSavedReaderPage(chapterNumber) {
 }
 
 function readBookmarks() {
+  if (backendReady && getCurrentUserSafe()) return bookmarksCache;
   const key = getBookmarksKey();
   if (!key) return [];
   try {
@@ -251,9 +275,124 @@ function readBookmarks() {
 }
 
 function saveBookmarks(items) {
+  bookmarksCache = items;
+  if (backendReady && getCurrentUserSafe()) {
+    persistBookmarksRemote(items);
+    return;
+  }
   const key = getBookmarksKey();
   if (!key) return;
   localStorage.setItem(key, JSON.stringify(items));
+}
+
+async function callApiSafe(path, options = {}) {
+  if (!window.Auth || typeof window.Auth.callApi !== 'function') return null;
+  try {
+    const result = await window.Auth.callApi(path, options);
+    return result;
+  } catch (error) {
+    console.log('[debug] api error:', path, error);
+    return null;
+  }
+}
+
+async function loadRemoteComments(chapterNumber) {
+  if (!backendReady) return;
+  const result = await callApiSafe(`/comments/${chapterNumber}`);
+  if (!result?.ok) return;
+  commentsCache[String(chapterNumber)] = Array.isArray(result.payload?.comments) ? result.payload.comments : [];
+}
+
+async function postRemoteComment(chapterNumber, content) {
+  if (!backendReady) return null;
+  const result = await callApiSafe(`/comments/${chapterNumber}`, {
+    method: 'POST',
+    body: { content }
+  });
+  if (!result?.ok) return null;
+  return result.payload?.comment || null;
+}
+
+async function deleteRemoteComment(id) {
+  if (!backendReady) return false;
+  const result = await callApiSafe(`/comments/${id}`, { method: 'DELETE' });
+  return Boolean(result?.ok);
+}
+
+async function loadRemoteForum() {
+  if (!backendReady) return;
+  const result = await callApiSafe('/forum');
+  if (!result?.ok) return;
+  forumCache = Array.isArray(result.payload?.messages) ? result.payload.messages : [];
+}
+
+async function postRemoteForumMessage(content) {
+  if (!backendReady) return { ok: false, message: '' };
+  const result = await callApiSafe('/forum', {
+    method: 'POST',
+    body: { content }
+  });
+  if (!result?.ok) {
+    return {
+      ok: false,
+      message: result?.payload?.message || 'Envoi impossible.'
+    };
+  }
+  return {
+    ok: true,
+    message: '',
+    row: result.payload?.message || null
+  };
+}
+
+async function deleteRemoteForumMessage(id) {
+  if (!backendReady) return false;
+  const result = await callApiSafe(`/forum/${id}`, { method: 'DELETE' });
+  return Boolean(result?.ok);
+}
+
+async function loadRemoteBookmarks() {
+  if (!backendReady) return;
+  const result = await callApiSafe('/bookmarks');
+  if (!result?.ok) return;
+  bookmarksCache = Array.isArray(result.payload?.bookmarks) ? result.payload.bookmarks : [];
+}
+
+let bookmarksPersistTimer = null;
+function persistBookmarksRemote(items) {
+  if (!backendReady) return;
+  if (bookmarksPersistTimer) window.clearTimeout(bookmarksPersistTimer);
+  bookmarksPersistTimer = window.setTimeout(async () => {
+    await callApiSafe('/bookmarks', {
+      method: 'PUT',
+      body: { bookmarks: Array.isArray(items) ? items : [] }
+    });
+  }, 220);
+}
+
+let progressPersistTimer = null;
+function persistProgressRemote(chapterNumber, page) {
+  if (!backendReady) return;
+  if (progressPersistTimer) window.clearTimeout(progressPersistTimer);
+  progressPersistTimer = window.setTimeout(async () => {
+    await callApiSafe(`/progress/${chapterNumber}`, {
+      method: 'PUT',
+      body: { page }
+    });
+  }, 180);
+}
+
+async function loadRemoteProgress(chapterNumber) {
+  if (!backendReady) return;
+  const result = await callApiSafe(`/progress/${chapterNumber}`);
+  if (!result?.ok) return;
+  const page = Number.parseInt(String(result.payload?.page || ''), 10);
+  if (!Number.isNaN(page) && page > 0) {
+    progressCache[String(chapterNumber)] = {
+      page,
+      updatedAt: Date.now()
+    };
+  }
 }
 
 function upsertBookmark(chapterNumber, page, mode) {
@@ -528,6 +667,30 @@ function buildImagePath(chapter, pageIndex) {
   return `mangas/nine-peaks/${chapter.folder}/${page}.jpg`;
 }
 
+function buildImageCandidates(chapter, pageIndex) {
+  const page = String(pageIndex).padStart(2, '0');
+  const base = `mangas/nine-peaks/${chapter.folder}/${page}`;
+  return [`${base}-1200.webp`, `${base}-800.webp`, `${base}.jpg`];
+}
+
+function attachImageFallback(imageEl, candidates, pageIndex, chapterNumber) {
+  imageEl.dataset.fallbackIndex = '0';
+  imageEl.src = candidates[0];
+  imageEl.onerror = () => {
+    let idx = Number.parseInt(imageEl.dataset.fallbackIndex || '0', 10) + 1;
+    imageEl.dataset.fallbackIndex = String(idx);
+    if (idx < candidates.length) {
+      imageEl.src = candidates[idx];
+      return;
+    }
+    console.log('[debug] Image manquante:', chapterNumber, pageIndex);
+    imageEl.alt = `Image manquante - chapitre ${chapterNumber} page ${pageIndex}`;
+    imageEl.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1300"><rect width="100%" height="100%" fill="#111"/><text x="50%" y="50%" fill="#888" font-size="36" text-anchor="middle" dominant-baseline="middle">Image manquante page ${pageIndex}</text></svg>`
+    );
+  };
+}
+
 function updatePageCounter(current, total) {
   const counterEl = document.querySelector('#page-counter');
   if (!counterEl) return;
@@ -602,12 +765,15 @@ function formatCommentDate(isoDate) {
   });
 }
 
-function renderComments(chapterNumber) {
+async function renderComments(chapterNumber) {
   const listEl = document.querySelector('#comments-list');
   const emptyEl = document.querySelector('#comments-empty');
   const countEl = document.querySelector('#comments-count');
   if (!listEl || !emptyEl || !countEl) return;
 
+  if (backendReady) {
+    await loadRemoteComments(chapterNumber);
+  }
   const user = getCurrentUserSafe();
   const comments = getChapterComments(chapterNumber).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -638,8 +804,15 @@ function renderComments(chapterNumber) {
   });
 
   listEl.querySelectorAll('button[data-delete-comment]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.deleteComment;
+      if (backendReady) {
+        const ok = await deleteRemoteComment(id);
+        if (!ok) {
+          showToast('Suppression impossible', 'warning');
+          return;
+        }
+      }
       const next = getChapterComments(chapterNumber).filter((comment) => comment.id !== id);
       setChapterComments(chapterNumber, next);
       renderComments(chapterNumber);
@@ -660,11 +833,26 @@ function setupComments(chapterNumber) {
   submitEl.disabled = false;
   renderComments(chapterNumber);
 
-  formEl.addEventListener('submit', (event) => {
+  formEl.addEventListener('submit', async (event) => {
     event.preventDefault();
     const content = String(inputEl.value || '').trim();
     if (!content) return;
     if (content.length > 800) return;
+
+    if (backendReady && user) {
+      const created = await postRemoteComment(chapterNumber, content);
+      if (!created) {
+        showToast('Commentaire refuse', 'warning');
+        return;
+      }
+      const existing = getChapterComments(chapterNumber);
+      existing.push(created);
+      setChapterComments(chapterNumber, existing);
+      inputEl.value = '';
+      showToast('Commentaire publie', 'success');
+      renderComments(chapterNumber);
+      return;
+    }
 
     const next = getChapterComments(chapterNumber);
     next.push({
@@ -680,11 +868,14 @@ function setupComments(chapterNumber) {
   });
 }
 
-function renderForum() {
+async function renderForum() {
   const listEl = document.querySelector('#forum-list');
   const emptyEl = document.querySelector('#forum-empty');
   if (!listEl || !emptyEl) return;
 
+  if (backendReady) {
+    await loadRemoteForum();
+  }
   const user = getCurrentUserSafe();
   const messages = readForumMessages().slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   if (!messages.length) {
@@ -711,8 +902,15 @@ function renderForum() {
   });
 
   listEl.querySelectorAll('button[data-delete-forum]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.deleteForum;
+      if (backendReady) {
+        const ok = await deleteRemoteForumMessage(id);
+        if (!ok) {
+          showToast('Suppression impossible', 'warning');
+          return;
+        }
+      }
       const next = readForumMessages().filter((message) => message.id !== id);
       saveForumMessages(next);
       renderForum();
@@ -739,10 +937,24 @@ function setupForum() {
   renderForum();
   submitEl.disabled = false;
   userEl.textContent = `Connecte: ${user.username}`;
-  formEl.addEventListener('submit', (event) => {
+  formEl.addEventListener('submit', async (event) => {
     event.preventDefault();
     const content = String(inputEl.value || '').trim();
     if (!content || content.length > 800) return;
+
+    if (backendReady) {
+      const posted = await postRemoteForumMessage(content);
+      if (!posted.ok) {
+        userEl.textContent = posted.message || `Connecte: ${user.username}`;
+        showToast(posted.message || 'Message refuse', 'warning');
+        return;
+      }
+      inputEl.value = '';
+      userEl.textContent = `Connecte: ${user.username}`;
+      showToast('Message forum envoye', 'success');
+      await renderForum();
+      return;
+    }
 
     const remainingMs = getForumCooldownRemaining(authorName);
     if (remainingMs > 0) {
@@ -810,13 +1022,8 @@ function updateSinglePage(chapter) {
   if (!imageEl) return;
   const safePage = Math.min(Math.max(activePage, 1), chapter.pages);
   activePage = safePage;
-  imageEl.src = buildImagePath(chapter, safePage);
+  attachImageFallback(imageEl, buildImageCandidates(chapter, safePage), safePage, chapter.number);
   imageEl.alt = `Chapitre ${chapter.number} - Page ${safePage}`;
-  imageEl.addEventListener('error', () => {
-    imageEl.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1300"><rect width="100%" height="100%" fill="#111"/><text x="50%" y="50%" fill="#888" font-size="36" text-anchor="middle" dominant-baseline="middle">Image manquante page ${safePage}</text></svg>`
-    );
-  }, { once: true });
   updatePageCounter(safePage, chapter.pages);
   refreshPagedNav();
 }
@@ -947,7 +1154,7 @@ function setupFullscreenToggle() {
   refreshFullscreenState();
 }
 
-function setupBookmarkButton() {
+async function setupBookmarkButton() {
   const btn = document.querySelector('#bookmark-toggle');
   const readerUser = document.querySelector('#reader-user');
   if (!btn || !readerUser || !activeChapter) return;
@@ -962,6 +1169,9 @@ function setupBookmarkButton() {
   }
 
   readerUser.textContent = `Connecte: ${user.username}`;
+  if (backendReady) {
+    await loadRemoteBookmarks();
+  }
 
   function refreshLabel() {
     const bookmark = getChapterBookmark(activeChapter.number);
@@ -1073,17 +1283,10 @@ function renderReaderPages(chapter) {
     image.loading = 'lazy';
     image.decoding = 'async';
     image.alt = `Chapitre ${chapter.number} - Page ${pageIndex}`;
-    image.src = buildImagePath(chapter, pageIndex);
+    attachImageFallback(image, buildImageCandidates(chapter, pageIndex), pageIndex, chapter.number);
     image.addEventListener('load', () => {
       image.dataset.naturalWidth = String(image.naturalWidth || 0);
       applyImageSizing(image);
-    });
-    image.addEventListener('error', () => {
-      console.log('[debug] Image manquante:', image.src);
-      image.alt = `Image manquante - chapitre ${chapter.number} page ${pageIndex}`;
-      image.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1300"><rect width="100%" height="100%" fill="#111"/><text x="50%" y="50%" fill="#888" font-size="36" text-anchor="middle" dominant-baseline="middle">Image manquante page ${pageIndex}</text></svg>`
-      );
     });
 
     figure.appendChild(image);
@@ -1105,11 +1308,15 @@ function setReaderTitle(chapter) {
 
 async function initIndexPage() {
   try {
+    await ensureBackendReady();
     const data = await fetchData();
     const chapters = Array.isArray(data.chapters) ? data.chapters : [];
     chaptersCache = chapters;
     renderUserActions();
     renderMangaInfo(data.manga || {});
+    if (backendReady && getCurrentUserSafe()) {
+      await loadRemoteBookmarks();
+    }
     renderChapterList(chaptersCache);
     renderChapterMenu(chaptersCache);
     setupChapterSearch(chaptersCache);
@@ -1123,6 +1330,7 @@ async function initIndexPage() {
 
 async function initReaderPage() {
   try {
+    await ensureBackendReady();
     const params = parseReaderParams();
     if (!params.chapter) {
       showReaderState('Chapitre introuvable dans l URL. Exemple: reader.html?chapter=25', true);
@@ -1140,6 +1348,9 @@ async function initReaderPage() {
     }
 
     activeChapter = chapters[chapterIndex];
+    if (backendReady && getCurrentUserSafe()) {
+      await loadRemoteProgress(activeChapter.number);
+    }
     const savedPage = params.hasExplicitPage ? null : getSavedReaderPage(activeChapter.number);
     const preferredPage = savedPage || params.page;
     activePage = Math.min(Math.max(preferredPage, 1), activeChapter.pages);
@@ -1159,7 +1370,7 @@ async function initReaderPage() {
     setupPagedNavButtons();
     setupZoomControls();
     setupModeControls();
-    setupBookmarkButton();
+    await setupBookmarkButton();
     setupComments(activeChapter.number);
     setupUiVisibilityToggle();
     setupReaderTapZones();

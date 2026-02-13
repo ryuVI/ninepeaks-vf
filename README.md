@@ -12,16 +12,18 @@ Site statique de lecture manga (GitHub Pages).
 
 - Lecture en mode defilement
 - Zoom lecteur
-- Bookmarks par utilisateur
-- Commentaires par chapitre (stockage local)
+- Bookmarks par utilisateur (sync backend si actif)
+- Commentaires par chapitre (sync backend si actif, fallback local)
 - Connexion / inscription locale + support backend API
 - Auth renforcee (PBKDF2 + sel, lock anti brute-force, migration anciens comptes)
 - Panel admin (compte `pcatv`)
 - Upload direct des images chapitre depuis le panel admin (Chrome/Edge)
+- Import direct d un dossier chapitre (creation/remplacement rapide)
 - Gestion des chapitres 100% via interface (ajout / edition / suppression)
 - Menu chapitres avec acces rapide depuis l'accueil
 - Ajout image par image par chapitre (page precise ou page suivante auto)
 - Page dediee `chapter-editor.html` via bouton Editer (visualiser, ajouter, supprimer pages)
+- Moderation admin rapide (suppression commentaires/forum)
 
 ## Upload direct depuis le panel admin
 
@@ -74,6 +76,13 @@ npm start
 ```
 
 API disponible sur `http://localhost:4000/api`.
+
+Le backend gere aussi:
+- commentaires
+- forum
+- bookmarks
+- progression de lecture
+- moderation admin
 
 ### 3) Integration front
 

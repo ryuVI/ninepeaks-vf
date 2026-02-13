@@ -5,6 +5,7 @@ const LEGACY_OVERRIDE_KEY = 'nine_peaks_data_override';
 let projectDirectoryHandle = null;
 let currentData = null;
 let selectedChapterNumber = null;
+const IMAGE_VARIANTS = [1200, 800];
 
 function showMessage(text, isError = false) {
   const el = document.querySelector('#admin-message');
@@ -69,6 +70,30 @@ function getChapterByNumber(chapterNumber) {
   return currentData.chapters.find((chapter) => chapter.number === chapterNumber) || null;
 }
 
+function upsertChapterData(chapterNumber, title, date, pageCount) {
+  const folder = `chapter-${chapterNumber}`;
+  const existing = getChapterByNumber(chapterNumber);
+  const baseChapter = {
+    number: chapterNumber,
+    title,
+    date,
+    pages: pageCount,
+    folder,
+    cover: `mangas/nine-peaks/${folder}/cover.jpg`
+  };
+  if (existing) {
+    existing.title = title;
+    existing.date = date;
+    existing.pages = pageCount;
+    existing.folder = folder;
+    existing.cover = baseChapter.cover;
+    return existing;
+  }
+  currentData.chapters.push(baseChapter);
+  sortChapters();
+  return baseChapter;
+}
+
 function sanitizeUploadFiles(fileList) {
   const files = Array.from(fileList || []);
   const sorted = files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
@@ -86,6 +111,64 @@ async function writeFile(directoryHandle, fileName, data) {
   const writable = await fileHandle.createWritable();
   await writable.write(data);
   await writable.close();
+}
+
+async function blobFromImageFile(file) {
+  const bitmap = await createImageBitmap(file);
+  return bitmap;
+}
+
+async function createWebpVariant(file, maxWidth) {
+  const bitmap = await blobFromImageFile(file);
+  const ratio = bitmap.width > 0 ? bitmap.height / bitmap.width : 1;
+  const targetWidth = Math.min(maxWidth, bitmap.width);
+  const targetHeight = Math.max(1, Math.round(targetWidth * ratio));
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  if (!ctx) return null;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+  bitmap.close();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9));
+  return blob || null;
+}
+
+async function writePageWithVariants(chapterDir, pageName, sourceFile) {
+  await writeFile(chapterDir, `${pageName}.jpg`, sourceFile);
+  for (let i = 0; i < IMAGE_VARIANTS.length; i += 1) {
+    const maxWidth = IMAGE_VARIANTS[i];
+    try {
+      const variantBlob = await createWebpVariant(sourceFile, maxWidth);
+      if (variantBlob) {
+        await writeFile(chapterDir, `${pageName}-${maxWidth}.webp`, variantBlob);
+      }
+    } catch (error) {
+      console.log('[debug] Variant webp ignoree:', pageName, maxWidth, error);
+    }
+  }
+}
+
+async function deletePageWithVariants(chapterDir, pageName) {
+  await deleteFileIfExists(chapterDir, `${pageName}.jpg`);
+  for (let i = 0; i < IMAGE_VARIANTS.length; i += 1) {
+    await deleteFileIfExists(chapterDir, `${pageName}-${IMAGE_VARIANTS[i]}.webp`);
+  }
+}
+
+async function clearChapterDirectory(chapterDir) {
+  const namesToRemove = [];
+  for await (const [name, handle] of chapterDir.entries()) {
+    if (handle.kind !== 'file') continue;
+    if (/\.(jpe?g|webp)$/i.test(name)) {
+      namesToRemove.push(name);
+    }
+  }
+  for (let i = 0; i < namesToRemove.length; i += 1) {
+    await deleteFileIfExists(chapterDir, namesToRemove[i]);
+  }
 }
 
 async function readFileBlob(directoryHandle, fileName) {
@@ -205,21 +288,14 @@ async function createChapter() {
   try {
     const folder = `chapter-${number}`;
     const chapterDir = await getChapterDir(folder);
+    await clearChapterDirectory(chapterDir);
     for (let i = 0; i < fileCheck.files.length; i += 1) {
-      const pageName = `${String(i + 1).padStart(2, '0')}.jpg`;
-      await writeFile(chapterDir, pageName, fileCheck.files[i]);
+      const pageName = String(i + 1).padStart(2, '0');
+      await writePageWithVariants(chapterDir, pageName, fileCheck.files[i]);
     }
     await writeFile(chapterDir, 'cover.jpg', fileCheck.files[0]);
 
-    currentData.chapters.push({
-      number,
-      title,
-      date,
-      pages: fileCheck.files.length,
-      folder,
-      cover: `mangas/nine-peaks/${folder}/cover.jpg`
-    });
-    sortChapters();
+    upsertChapterData(number, title, date, fileCheck.files.length);
     persistSiteData();
     await writeChaptersJsonToProject();
 
@@ -233,6 +309,63 @@ async function createChapter() {
   } catch (error) {
     console.error('[debug] Erreur creation chapitre:', error);
     showMessage('Erreur pendant la creation du chapitre.', true);
+  }
+}
+
+async function importChapterFolder() {
+  if (!projectDirectoryHandle) {
+    showMessage('Choisis d abord la racine du projet.', true);
+    return;
+  }
+
+  const numberInput = document.querySelector('#import-chapter-number');
+  const titleInput = document.querySelector('#import-chapter-title');
+  const dateInput = document.querySelector('#import-chapter-date');
+  const folderInput = document.querySelector('#import-chapter-folder');
+
+  const number = Number.parseInt(String(numberInput?.value || ''), 10);
+  const title = String(titleInput?.value || '').trim();
+  const date = String(dateInput?.value || '').trim();
+  const fileCheck = sanitizeUploadFiles(folderInput?.files);
+
+  if (Number.isNaN(number) || number < 1 || !title || !date) {
+    showMessage('Renseigne numero, titre et date valides.', true);
+    return;
+  }
+  if (!fileCheck.ok) {
+    showMessage(fileCheck.message, true);
+    return;
+  }
+  if (!fileCheck.files.length) {
+    showMessage('Le dossier doit contenir des images jpg/jpeg.', true);
+    return;
+  }
+
+  try {
+    const folder = `chapter-${number}`;
+    const chapterDir = await getChapterDir(folder);
+    await clearChapterDirectory(chapterDir);
+
+    for (let i = 0; i < fileCheck.files.length; i += 1) {
+      const pageName = String(i + 1).padStart(2, '0');
+      await writePageWithVariants(chapterDir, pageName, fileCheck.files[i]);
+    }
+    await writeFile(chapterDir, 'cover.jpg', fileCheck.files[0]);
+
+    upsertChapterData(number, title, date, fileCheck.files.length);
+    persistSiteData();
+    await writeChaptersJsonToProject();
+
+    selectedChapterNumber = number;
+    renderChapterSelect();
+    if (numberInput) numberInput.value = '';
+    if (titleInput) titleInput.value = '';
+    if (dateInput) dateInput.value = '';
+    if (folderInput) folderInput.value = '';
+    showMessage(`Chapitre ${number} importe avec ${fileCheck.files.length} pages.`);
+  } catch (error) {
+    console.error('[debug] Erreur import dossier chapitre:', error);
+    showMessage('Erreur pendant l import du dossier chapitre.', true);
   }
 }
 
@@ -261,7 +394,7 @@ async function addPageToSelectedChapter() {
   try {
     const chapterDir = await getChapterDir(chapter.folder);
     const newPage = Number(chapter.pages || 0) + 1;
-    await writeFile(chapterDir, `${String(newPage).padStart(2, '0')}.jpg`, file);
+    await writePageWithVariants(chapterDir, String(newPage).padStart(2, '0'), file);
     if (newPage === 1) {
       await writeFile(chapterDir, 'cover.jpg', file);
     }
@@ -303,12 +436,23 @@ async function removePageFromSelectedChapter() {
   try {
     const chapterDir = await getChapterDir(chapter.folder);
     for (let i = targetPage + 1; i <= chapter.pages; i += 1) {
-      const sourceName = `${String(i).padStart(2, '0')}.jpg`;
-      const destName = `${String(i - 1).padStart(2, '0')}.jpg`;
-      const blob = await readFileBlob(chapterDir, sourceName);
-      await writeFile(chapterDir, destName, blob);
+      const sourceBase = String(i).padStart(2, '0');
+      const destBase = String(i - 1).padStart(2, '0');
+
+      const jpgBlob = await readFileBlob(chapterDir, `${sourceBase}.jpg`);
+      await writeFile(chapterDir, `${destBase}.jpg`, jpgBlob);
+
+      for (let v = 0; v < IMAGE_VARIANTS.length; v += 1) {
+        const size = IMAGE_VARIANTS[v];
+        try {
+          const variantBlob = await readFileBlob(chapterDir, `${sourceBase}-${size}.webp`);
+          await writeFile(chapterDir, `${destBase}-${size}.webp`, variantBlob);
+        } catch {
+          await deleteFileIfExists(chapterDir, `${destBase}-${size}.webp`);
+        }
+      }
     }
-    await deleteFileIfExists(chapterDir, `${String(chapter.pages).padStart(2, '0')}.jpg`);
+    await deletePageWithVariants(chapterDir, String(chapter.pages).padStart(2, '0'));
     chapter.pages = Math.max(0, chapter.pages - 1);
 
     if (chapter.pages > 0) {
@@ -396,6 +540,7 @@ function setupMangaActions() {
 function setupChapterActions() {
   const select = document.querySelector('#chapter-select');
   const createBtn = document.querySelector('#create-chapter-btn');
+  const importBtn = document.querySelector('#import-chapter-btn');
   const addPageBtn = document.querySelector('#add-page-btn');
   const removePageBtn = document.querySelector('#remove-page-btn');
 
@@ -406,8 +551,89 @@ function setupChapterActions() {
   });
 
   createBtn?.addEventListener('click', createChapter);
+  importBtn?.addEventListener('click', importChapterFolder);
   addPageBtn?.addEventListener('click', addPageToSelectedChapter);
   removePageBtn?.addEventListener('click', removePageFromSelectedChapter);
+}
+
+async function callAdminApi(path, options = {}) {
+  if (!window.Auth || typeof window.Auth.callApi !== 'function') return null;
+  try {
+    return await window.Auth.callApi(path, options);
+  } catch (error) {
+    console.log('[debug] admin api error:', path, error);
+    return null;
+  }
+}
+
+function renderModerationRows(container, rows, type) {
+  if (!container) return;
+  if (!Array.isArray(rows) || !rows.length) {
+    container.innerHTML = '<p class="muted">Aucun element.</p>';
+    return;
+  }
+  container.innerHTML = '';
+  rows.forEach((row) => {
+    const item = document.createElement('article');
+    item.className = 'chapter-manager-item';
+    const chapterText = row.chapterNumber ? `Chapitre ${row.chapterNumber} | ` : '';
+    item.innerHTML = `
+      <div>
+        <strong>${row.author}</strong>
+        <p>${chapterText}${new Date(row.createdAt).toLocaleString('fr-FR')}</p>
+        <p>${row.content}</p>
+      </div>
+      <div class="chapter-manager-actions">
+        <button class="btn ghost danger" data-mod-type="${type}" data-mod-id="${row.id}" type="button">Supprimer</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+async function refreshModerationPanel() {
+  const commentsEl = document.querySelector('#moderation-comments');
+  const forumEl = document.querySelector('#moderation-forum');
+  const result = await callAdminApi('/mod/overview');
+  if (!result?.ok) {
+    if (commentsEl) commentsEl.innerHTML = '<p class="muted">Moderation indisponible.</p>';
+    if (forumEl) forumEl.innerHTML = '<p class="muted">Moderation indisponible.</p>';
+    return;
+  }
+  const comments = Array.isArray(result.payload?.comments) ? result.payload.comments.slice(0, 25) : [];
+  const forum = Array.isArray(result.payload?.forum) ? result.payload.forum.slice(0, 25) : [];
+  renderModerationRows(commentsEl, comments, 'comment');
+  renderModerationRows(forumEl, forum, 'forum');
+
+  document.querySelectorAll('button[data-mod-id]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const id = String(button.dataset.modId || '');
+      const type = String(button.dataset.modType || '');
+      if (!id || !type) return;
+      const path = type === 'comment' ? `/mod/comment/${id}` : `/mod/forum/${id}`;
+      const deleted = await callAdminApi(path, { method: 'DELETE' });
+      if (!deleted?.ok) {
+        showMessage('Suppression moderation echouee.', true);
+        return;
+      }
+      showMessage('Element supprime (moderation).');
+      refreshModerationPanel();
+    });
+  });
+}
+
+async function setupModerationPanel() {
+  const box = document.querySelector('#moderation-box');
+  const refreshBtn = document.querySelector('#moderation-refresh');
+  if (!box || !refreshBtn || !window.Auth) return;
+  const user = window.Auth.getCurrentUser();
+  if (!user?.isAdmin) return;
+  const backendUp = await window.Auth.isBackendAvailable();
+  if (!backendUp) return;
+
+  box.classList.remove('hidden');
+  refreshBtn.addEventListener('click', refreshModerationPanel);
+  await refreshModerationPanel();
 }
 
 async function initAdminPage() {
@@ -429,6 +655,7 @@ async function initAdminPage() {
   setupProjectFolderSelection();
   setupMangaActions();
   setupChapterActions();
+  setupModerationPanel();
 
   const logoutBtn = document.querySelector('#logout-btn');
   logoutBtn?.addEventListener('click', () => {

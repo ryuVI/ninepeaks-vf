@@ -61,6 +61,27 @@
           </article>
 
           <article class="admin-box">
+            <h3>Import rapide d un dossier chapitre</h3>
+            <p class="muted">Selectionne un dossier avec les images du chapitre (01.jpg, 02.jpg...).</p>
+            <div class="admin-grid">
+              <label for="import-chapter-number">Numero chapitre</label>
+              <input id="import-chapter-number" type="number" min="1" step="1" placeholder="28">
+
+              <label for="import-chapter-title">Titre</label>
+              <input id="import-chapter-title" type="text" placeholder="Titre du chapitre">
+
+              <label for="import-chapter-date">Date</label>
+              <input id="import-chapter-date" type="date">
+
+              <label for="import-chapter-folder">Dossier images chapitre</label>
+              <input id="import-chapter-folder" type="file" accept=".jpg,.jpeg,image/jpeg" webkitdirectory directory multiple>
+            </div>
+            <div class="admin-actions">
+              <button id="import-chapter-btn" class="btn primary" type="button">Importer dossier</button>
+            </div>
+          </article>
+
+          <article class="admin-box">
             <h3>3) Selection chapitre existant</h3>
             <div class="admin-grid">
               <label for="chapter-select">Chapitre</label>
@@ -109,6 +130,20 @@
             <div class="admin-actions">
               <button id="apply-manga" class="btn primary" type="button">Appliquer manga</button>
               <button id="reset-data" class="btn ghost" type="button">Revenir aux donnees de base</button>
+            </div>
+          </article>
+
+          <article id="moderation-box" class="admin-box hidden">
+            <h3>Moderation rapide</h3>
+            <p class="muted">Suppression des derniers commentaires et messages forum.</p>
+            <div class="admin-actions">
+              <button id="moderation-refresh" class="btn ghost" type="button">Rafraichir</button>
+            </div>
+            <div class="admin-grid">
+              <label>Commentaires recents</label>
+              <div id="moderation-comments" class="chapter-manager-list"></div>
+              <label>Forum recent</label>
+              <div id="moderation-forum" class="chapter-manager-list"></div>
             </div>
           </article>
         </aside>
