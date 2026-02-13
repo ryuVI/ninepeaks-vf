@@ -10,11 +10,11 @@ Site statique de lecture manga (GitHub Pages).
 
 ## Fonctionnalites principales
 
-- Lecture en mode defilement ou image par image
+- Lecture en mode defilement
 - Zoom lecteur
 - Bookmarks par utilisateur
 - Commentaires par chapitre (stockage local)
-- Connexion / inscription locale
+- Connexion / inscription locale + support backend API
 - Auth renforcee (PBKDF2 + sel, lock anti brute-force, migration anciens comptes)
 - Panel admin (compte `pcatv`)
 - Upload direct des images chapitre depuis le panel admin (Chrome/Edge)
@@ -53,6 +53,35 @@ Tu n'as plus besoin d'editer `chapters.json` a la main:
 - Regles mot de passe renforcees a l'inscription
 
 Note: sans backend, ce systeme reste une securite locale navigateur.
+
+## Backend (nouveau)
+
+Un backend Node.js + SQLite est ajoute dans `backend/` pour une auth plus solide.
+
+### 1) Installation backend
+
+```powershell
+cd c:\webtst\webtst\backend
+npm install
+copy .env.example .env
+```
+
+### 2) Lancement backend
+
+```powershell
+cd c:\webtst\webtst\backend
+npm start
+```
+
+API disponible sur `http://localhost:4000/api`.
+
+### 3) Integration front
+
+Le front detecte automatiquement le backend:
+- si backend actif: auth via API (`/api/auth/signup`, `/api/auth/login`, `/api/auth/me`)
+- sinon: fallback vers auth locale existante
+
+Les comptes locaux existants restent utilisables en fallback.
 
 ## Lancer en local
 

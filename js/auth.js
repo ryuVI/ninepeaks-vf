@@ -3,8 +3,10 @@
 (() => {
   const USERS_KEY = 'nine_peaks_users';
   const SESSION_KEY = 'nine_peaks_session';
+  const API_TOKEN_KEY = 'nine_peaks_api_token';
   const LEGACY_ADMIN_SESSION_KEY = 'nine_peaks_admin_session';
   const ATTEMPTS_KEY = 'nine_peaks_auth_attempts';
+  const API_BASE_URL = 'http://localhost:4000/api';
 
   const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
   const ADMIN_USERNAMES = ['pcatv'];
@@ -201,6 +203,51 @@
     }
   }
 
+  function getApiToken() {
+    return localStorage.getItem(API_TOKEN_KEY) || '';
+  }
+
+  function setApiToken(token) {
+    if (!token) return;
+    localStorage.setItem(API_TOKEN_KEY, token);
+  }
+
+  function clearApiToken() {
+    localStorage.removeItem(API_TOKEN_KEY);
+  }
+
+  async function apiRequest(path, options = {}) {
+    const url = `${API_BASE_URL}${path}`;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    };
+    const token = getApiToken();
+    if (token && !headers.Authorization) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    const response = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+    const payload = await response.json().catch(() => ({}));
+    return {
+      ok: response.ok,
+      status: response.status,
+      payload
+    };
+  }
+
+  async function isBackendAvailable() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`, { method: 'GET' });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
   function buildSessionFingerprintSync(username) {
     return `${username}|${navigator.userAgent || ''}`;
   }
@@ -223,6 +270,7 @@
   function logout() {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(LEGACY_ADMIN_SESSION_KEY);
+    clearApiToken();
   }
 
   function isSessionValid() {
@@ -303,6 +351,25 @@
   }
 
   async function signUp(usernameRaw, passwordRaw) {
+    const backendUp = await isBackendAvailable();
+    if (backendUp) {
+      try {
+        const result = await apiRequest('/auth/signup', {
+          method: 'POST',
+          body: {
+            username: usernameRaw,
+            password: passwordRaw
+          }
+        });
+        if (!result.ok) {
+          return { ok: false, message: result.payload?.message || 'Inscription impossible.' };
+        }
+        return { ok: true, message: result.payload?.message || 'Compte cree avec succes.' };
+      } catch (error) {
+        console.log('[debug] Backend signup indisponible, fallback local:', error);
+      }
+    }
+
     await ensureAdminBootstrapAccount();
     const username = normalizeUsername(usernameRaw);
     const password = String(passwordRaw || '');
@@ -333,6 +400,36 @@
   }
 
   async function login(usernameRaw, passwordRaw) {
+    const backendUp = await isBackendAvailable();
+    if (backendUp) {
+      try {
+        const result = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: {
+            username: usernameRaw,
+            password: passwordRaw
+          }
+        });
+        if (!result.ok) {
+          return { ok: false, message: result.payload?.message || 'Connexion impossible.' };
+        }
+        const username = normalizeUsername(result.payload?.user?.username || usernameRaw);
+        const token = String(result.payload?.token || '');
+        if (token) setApiToken(token);
+        setSession(username);
+        return {
+          ok: true,
+          message: result.payload?.message || 'Connexion reussie.',
+          user: {
+            username,
+            isAdmin: ADMIN_USERNAMES.includes(username)
+          }
+        };
+      } catch (error) {
+        console.log('[debug] Backend login indisponible, fallback local:', error);
+      }
+    }
+
     await ensureAdminBootstrapAccount();
     // Desactive le verrouillage de tentatives pour laisser l'utilisateur reessayer librement.
     localStorage.removeItem(ATTEMPTS_KEY);
