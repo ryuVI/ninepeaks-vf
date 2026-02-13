@@ -7,6 +7,7 @@ const FORUM_KEY = 'nine_peaks_forum_messages';
 const FORUM_COOLDOWN_MS = 15000;
 const READER_PROGRESS_KEY_PREFIX = 'nine_peaks_reader_progress_';
 const COMMENTS_MAINTENANCE_MODE = true;
+const FORUM_MAINTENANCE_MODE = true;
 
 let chaptersCache = [];
 let activeChapter = null;
@@ -1041,6 +1042,20 @@ async function setupForum() {
     return;
   }
   if (forumSection) forumSection.classList.remove('hidden');
+
+  if (FORUM_MAINTENANCE_MODE) {
+    inputEl.disabled = true;
+    inputEl.placeholder = 'Forum temporairement indisponible';
+    submitEl.disabled = true;
+    userEl.textContent = 'Publication indisponible (en travaux)';
+    await renderForum();
+    startForumAutoRefresh();
+    formEl.addEventListener('submit', (event) => {
+      event.preventDefault();
+      showToast('Forum en travaux pour le moment', 'warning');
+    });
+    return;
+  }
 
   const authorName = user.username;
   renderForum();
