@@ -6,10 +6,12 @@
   const API_TOKEN_KEY = 'nine_peaks_api_token';
   const LEGACY_ADMIN_SESSION_KEY = 'nine_peaks_admin_session';
   const ATTEMPTS_KEY = 'nine_peaks_auth_attempts';
-  const API_BASE_URL = 'http://localhost:4000/api';
+  const API_BASE_URL_FALLBACK = 'http://localhost:4000/api';
+  const API_BASE_URL_STORAGE_KEY = 'nine_peaks_api_base_url';
   let backendAvailabilityCache = null;
   let backendAvailabilityTs = 0;
   const BACKEND_CACHE_TTL_MS = 15000;
+  let activeApiBaseUrl = '';
 
   const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
   const ADMIN_USERNAMES = ['pcatv'];
@@ -25,6 +27,44 @@
   const LOCK_DURATION_MS = 1000 * 60 * 10;
   const ATTEMPT_WINDOW_MS = 1000 * 60 * 10;
   const BASE_FAIL_DELAY_MS = 350;
+
+  function normalizeApiBase(raw) {
+    const value = String(raw || '').trim();
+    if (!value) return '';
+    return value.endsWith('/') ? value.slice(0, -1) : value;
+  }
+
+  function getApiBaseCandidates() {
+    const list = [];
+    const explicit = normalizeApiBase(localStorage.getItem(API_BASE_URL_STORAGE_KEY));
+    if (explicit) list.push(explicit);
+
+    const currentOrigin = normalizeApiBase(window.location.origin || '');
+    if (currentOrigin && !currentOrigin.startsWith('file://')) {
+      list.push(`${currentOrigin}/api`);
+    }
+    list.push(API_BASE_URL_FALLBACK);
+    return Array.from(new Set(list));
+  }
+
+  async function detectApiBaseUrl() {
+    if (activeApiBaseUrl) return activeApiBaseUrl;
+    const candidates = getApiBaseCandidates();
+    for (let i = 0; i < candidates.length; i += 1) {
+      const candidate = candidates[i];
+      try {
+        const response = await fetch(`${candidate}/health`, { method: 'GET' });
+        if (response.ok) {
+          activeApiBaseUrl = candidate;
+          console.log('[debug] API base detectee:', activeApiBaseUrl);
+          return activeApiBaseUrl;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return '';
+  }
 
   function normalizeUsername(username) {
     return String(username || '').trim().toLowerCase();
@@ -220,7 +260,8 @@
   }
 
   async function apiRequest(path, options = {}) {
-    const url = `${API_BASE_URL}${path}`;
+    const baseUrl = activeApiBaseUrl || (await detectApiBaseUrl()) || API_BASE_URL_FALLBACK;
+    const url = `${baseUrl}${path}`;
     const headers = {
       'Content-Type': 'application/json',
       ...(options.headers || {})
@@ -248,10 +289,13 @@
       return backendAvailabilityCache;
     }
     try {
-      const response = await fetch(`${API_BASE_URL}/health`, { method: 'GET' });
-      backendAvailabilityCache = response.ok;
+      const detected = await detectApiBaseUrl();
+      const response = detected
+        ? { ok: true }
+        : await fetch(`${API_BASE_URL_FALLBACK}/health`, { method: 'GET' });
+      backendAvailabilityCache = Boolean(response.ok);
       backendAvailabilityTs = now;
-      return response.ok;
+      return backendAvailabilityCache;
     } catch {
       backendAvailabilityCache = false;
       backendAvailabilityTs = now;

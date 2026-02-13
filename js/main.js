@@ -23,6 +23,7 @@ let commentsCache = {};
 let forumCache = [];
 let bookmarksCache = [];
 let progressCache = {};
+let backendUnavailableWarned = false;
 
 function getReaderContentWidth() {
   const raw = getComputedStyle(document.documentElement).getPropertyValue('--reader-content-width').trim();
@@ -149,14 +150,46 @@ function readForumMessages() {
   if (backendReady) {
     const mergedMap = new Map();
     forumCache.forEach((item) => {
-      if (item && item.id) mergedMap.set(item.id, item);
+      const normalized = normalizeForumMessage(item);
+      if (!normalized) return;
+      mergedMap.set(getForumMessageKey(normalized), normalized);
     });
     localMessages.forEach((item) => {
-      if (item && item.id && !mergedMap.has(item.id)) mergedMap.set(item.id, item);
+      const normalized = normalizeForumMessage(item);
+      if (!normalized) return;
+      const key = getForumMessageKey(normalized);
+      if (!mergedMap.has(key)) mergedMap.set(key, normalized);
     });
     return Array.from(mergedMap.values());
   }
   return localMessages;
+}
+
+function getForumMessageKey(message) {
+  if (message.id) return `id:${message.id}`;
+  return `sig:${message.author}|${message.content}|${message.createdAt}`;
+}
+
+function normalizeForumMessage(raw, indexHint = 0) {
+  if (!raw || typeof raw !== 'object') return null;
+  const author = String(raw.author || raw.username || 'invite').trim();
+  const content = String(raw.content || raw.message || raw.text || raw.body || '').trim();
+  if (!content) return null;
+
+  const createdAtRaw = raw.createdAt || raw.created_at || raw.date || raw.timestamp || new Date().toISOString();
+  const createdAtDate = new Date(createdAtRaw);
+  const createdAt = Number.isNaN(createdAtDate.getTime()) ? new Date().toISOString() : createdAtDate.toISOString();
+
+  let id = String(raw.id || '').trim();
+  if (!id) {
+    id = `legacy_${author}_${createdAt}_${indexHint}`;
+  }
+  return {
+    id,
+    author,
+    content,
+    createdAt
+  };
 }
 
 function readForumMessagesLocal() {
@@ -164,16 +197,22 @@ function readForumMessagesLocal() {
     const raw = localStorage.getItem(FORUM_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((row, index) => normalizeForumMessage(row, index))
+      .filter(Boolean);
   } catch {
     return [];
   }
 }
 
 function saveForumMessages(messages) {
-  forumCache = messages;
+  const normalized = Array.isArray(messages)
+    ? messages.map((row, index) => normalizeForumMessage(row, index)).filter(Boolean)
+    : [];
+  forumCache = normalized;
   try {
-    localStorage.setItem(FORUM_KEY, JSON.stringify(messages));
+    localStorage.setItem(FORUM_KEY, JSON.stringify(normalized));
   } catch {
     // ignore localStorage failures
   }
@@ -341,8 +380,17 @@ async function deleteRemoteComment(id) {
 async function loadRemoteForum() {
   if (!backendReady) return;
   const result = await callApiSafe('/forum');
-  if (!result?.ok) return;
-  forumCache = Array.isArray(result.payload?.messages) ? result.payload.messages : [];
+  if (!result?.ok) {
+    if (!backendUnavailableWarned) {
+      console.log('[debug] Forum backend indisponible, fallback local actif');
+      backendUnavailableWarned = true;
+    }
+    return;
+  }
+  backendUnavailableWarned = false;
+  forumCache = Array.isArray(result.payload?.messages)
+    ? result.payload.messages.map((row, index) => normalizeForumMessage(row, index)).filter(Boolean)
+    : [];
 }
 
 async function postRemoteForumMessage(content) {
