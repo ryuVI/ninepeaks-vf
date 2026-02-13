@@ -539,14 +539,8 @@ function setupComments(chapterNumber) {
   if (!formEl || !inputEl || !submitEl || !userEl) return;
 
   const user = getCurrentUserSafe();
-  if (!user) {
-    submitEl.disabled = true;
-    userEl.textContent = 'Connecte-toi pour commenter';
-    renderComments(chapterNumber);
-    return;
-  }
-
-  userEl.textContent = `Connecte: ${user.username}`;
+  const authorName = user ? user.username : 'Invite';
+  userEl.textContent = user ? `Connecte: ${user.username}` : 'Mode invite: commentaire autorise';
   submitEl.disabled = false;
   renderComments(chapterNumber);
 
@@ -559,7 +553,7 @@ function setupComments(chapterNumber) {
     const next = getChapterComments(chapterNumber);
     next.push({
       id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      author: user.username,
+      author: authorName,
       content,
       createdAt: new Date().toISOString()
     });
@@ -617,15 +611,10 @@ function setupForum() {
   if (!formEl || !inputEl || !submitEl || !userEl) return;
 
   const user = getCurrentUserSafe();
+  const authorName = user ? user.username : 'Invite';
   renderForum();
-  if (!user) {
-    submitEl.disabled = true;
-    userEl.textContent = 'Connecte-toi pour participer';
-    return;
-  }
-
   submitEl.disabled = false;
-  userEl.textContent = `Connecte: ${user.username}`;
+  userEl.textContent = user ? `Connecte: ${user.username}` : 'Mode invite: message autorise';
   formEl.addEventListener('submit', (event) => {
     event.preventDefault();
     const content = String(inputEl.value || '').trim();
@@ -633,7 +622,7 @@ function setupForum() {
     const next = readForumMessages();
     next.push({
       id: `f_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      author: user.username,
+      author: authorName,
       content,
       createdAt: new Date().toISOString()
     });
