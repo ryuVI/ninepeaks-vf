@@ -477,6 +477,32 @@ function renderChapterMenu(chapters) {
   });
 }
 
+function setupChapterSearch(chapters) {
+  const inputEl = document.querySelector('#chapter-filter-input');
+  const countEl = document.querySelector('#chapter-filter-count');
+  if (!inputEl || !countEl) return;
+
+  const base = chapters.slice();
+  function applyFilter() {
+    const query = String(inputEl.value || '').trim().toLowerCase();
+    if (!query) {
+      renderChapterList(base);
+      countEl.textContent = `${base.length} chapitre${base.length > 1 ? 's' : ''}`;
+      return;
+    }
+    const filtered = base.filter((chapter) => {
+      const numberText = String(chapter.number || '');
+      const titleText = String(chapter.title || '').toLowerCase();
+      return numberText.includes(query) || titleText.includes(query);
+    });
+    renderChapterList(filtered);
+    countEl.textContent = `${filtered.length} chapitre${filtered.length > 1 ? 's' : ''}`;
+  }
+
+  inputEl.addEventListener('input', applyFilter);
+  applyFilter();
+}
+
 function showIndexError(message) {
   const errorEl = document.querySelector('#chapter-error');
   if (!errorEl) return;
@@ -506,6 +532,11 @@ function updatePageCounter(current, total) {
   const counterEl = document.querySelector('#page-counter');
   if (!counterEl) return;
   counterEl.textContent = `Page ${current} / ${total}`;
+  const progressBar = document.querySelector('#reader-progress-bar');
+  if (progressBar) {
+    const ratio = total > 0 ? Math.min(100, Math.max(0, (current / total) * 100)) : 0;
+    progressBar.style.width = `${ratio}%`;
+  }
 }
 
 function enableHeaderCollapse() {
@@ -1081,6 +1112,7 @@ async function initIndexPage() {
     renderMangaInfo(data.manga || {});
     renderChapterList(chaptersCache);
     renderChapterMenu(chaptersCache);
+    setupChapterSearch(chaptersCache);
     renderBookmarks(chaptersCache);
     setupForum();
   } catch (error) {

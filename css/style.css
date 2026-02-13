@@ -294,6 +294,14 @@ a {
   margin-bottom: 0.9rem;
 }
 
+.chapter-filter {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
 .menu-label {
   color: var(--text-soft);
   font-size: 0.9rem;
@@ -419,6 +427,24 @@ a {
 
 .reader-header {
   transition: transform var(--transition), opacity var(--transition);
+}
+
+.reader-progress-track {
+  height: 4px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.reader-progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(
+    90deg,
+    var(--accent-orange) 0%,
+    var(--accent-pink) 45%,
+    var(--accent-cyan) 100%
+  );
+  transition: width 0.18s linear;
 }
 
 .reader-header.collapsed {
@@ -1067,6 +1093,11 @@ body.ui-forced-hidden .reader-side-dock .ui-toggle-btn .dock-text {
 
   .chapter-menu {
     grid-template-columns: 170px 1fr auto;
+    align-items: center;
+  }
+
+  .chapter-filter {
+    grid-template-columns: 140px 1fr auto;
     align-items: center;
   }
 

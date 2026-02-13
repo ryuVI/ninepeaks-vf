@@ -63,6 +63,11 @@
         </select>
         <button id="chapter-jump-btn" class="btn ghost" type="button">Ouvrir</button>
       </div>
+      <div class="chapter-filter card-lite" aria-label="Recherche chapitres">
+        <label for="chapter-filter-input" class="menu-label">Recherche</label>
+        <input id="chapter-filter-input" class="menu-select" type="search" placeholder="Ex: 12 ou titre...">
+        <span id="chapter-filter-count" class="muted">0 chapitre</span>
+      </div>
       <div id="chapter-list" class="chapter-grid" role="list"></div>
       <p id="chapter-empty" class="state-msg hidden" aria-live="polite">Aucun chapitre disponible pour le moment.</p>
       <p id="chapter-error" class="state-msg error hidden" aria-live="assertive"></p>
