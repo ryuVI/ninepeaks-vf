@@ -16,6 +16,8 @@ let headerLastY = 0;
 let forceHideUi = false;
 let resizeRafId = null;
 let toastTimeoutId = null;
+let forumAutoRefreshTimer = null;
+const FORUM_AUTO_REFRESH_MS = 10000;
 let backendReady = false;
 let commentsCache = {};
 let forumCache = [];
@@ -918,6 +920,31 @@ async function renderForum() {
   });
 }
 
+function stopForumAutoRefresh() {
+  if (!forumAutoRefreshTimer) return;
+  window.clearInterval(forumAutoRefreshTimer);
+  forumAutoRefreshTimer = null;
+}
+
+function startForumAutoRefresh() {
+  const page = document.body.dataset.page;
+  if (page !== 'index') return;
+  const formEl = document.querySelector('#forum-form');
+  if (!formEl) return;
+  if (forumAutoRefreshTimer) return;
+
+  forumAutoRefreshTimer = window.setInterval(() => {
+    if (document.hidden) return;
+    renderForum();
+  }, FORUM_AUTO_REFRESH_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      renderForum();
+    }
+  });
+}
+
 function setupForum() {
   const formEl = document.querySelector('#forum-form');
   const inputEl = document.querySelector('#forum-input');
@@ -929,12 +956,14 @@ function setupForum() {
   const forumSection = document.querySelector('#forum-heading')?.closest('.chapter-section');
   if (!user) {
     if (forumSection) forumSection.classList.add('hidden');
+    stopForumAutoRefresh();
     return;
   }
   if (forumSection) forumSection.classList.remove('hidden');
 
   const authorName = user.username;
   renderForum();
+  startForumAutoRefresh();
   submitEl.disabled = false;
   userEl.textContent = `Connecte: ${user.username}`;
   formEl.addEventListener('submit', async (event) => {
@@ -1392,6 +1421,11 @@ function init() {
   if (page === 'index') initIndexPage();
   if (page === 'reader') initReaderPage();
   setupReaderResizeHandling();
+  window.addEventListener('storage', (event) => {
+    if (event.key === FORUM_KEY && document.body.dataset.page === 'index') {
+      renderForum();
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);
