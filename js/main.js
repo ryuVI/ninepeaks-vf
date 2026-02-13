@@ -6,6 +6,7 @@ const COMMENTS_KEY = 'nine_peaks_comments';
 const FORUM_KEY = 'nine_peaks_forum_messages';
 const FORUM_COOLDOWN_MS = 15000;
 const READER_PROGRESS_KEY_PREFIX = 'nine_peaks_reader_progress_';
+const COMMENTS_MAINTENANCE_MODE = true;
 
 let chaptersCache = [];
 let activeChapter = null;
@@ -893,6 +894,19 @@ function setupComments(chapterNumber) {
   const submitEl = document.querySelector('#comment-submit');
   const userEl = document.querySelector('#comment-user');
   if (!formEl || !inputEl || !submitEl || !userEl) return;
+
+  if (COMMENTS_MAINTENANCE_MODE) {
+    inputEl.disabled = true;
+    inputEl.placeholder = 'Commentaires temporairement indisponibles';
+    submitEl.disabled = true;
+    userEl.textContent = 'Publication indisponible (en travaux)';
+    renderComments(chapterNumber);
+    formEl.addEventListener('submit', (event) => {
+      event.preventDefault();
+      showToast('Commentaires en travaux pour le moment', 'warning');
+    });
+    return;
+  }
 
   const user = getCurrentUserSafe();
   const authorName = user ? user.username : 'Invite';

@@ -621,6 +621,20 @@ body.ui-forced-hidden .reader-side-dock .ui-toggle-btn .dock-text {
   padding: 0.9rem;
 }
 
+.maintenance-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+  padding: 0.42rem 0.7rem;
+  border: 1px solid rgba(255, 173, 0, 0.58);
+  border-radius: 8px;
+  background: rgba(255, 173, 0, 0.13);
+  color: #ffe9b8;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
 .comments-head {
   display: flex;
   justify-content: space-between;
