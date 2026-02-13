@@ -87,11 +87,11 @@
       </div>
       <section class="card forum-card" aria-label="Discussion communautaire">
         <div class="maintenance-tab" role="status" aria-live="polite">🚧 Forum en travaux</div>
-        <form id="forum-form" class="forum-form" novalidate>
-          <textarea id="forum-input" class="input-textarea" placeholder="Parle avec la communaute..." maxlength="800"></textarea>
+        <form id="forum-form" class="forum-form form-locked" novalidate aria-disabled="true">
+          <textarea id="forum-input" class="input-textarea" placeholder="Forum en travaux" maxlength="800" disabled readonly></textarea>
           <div class="comment-actions">
-            <button id="forum-submit" class="btn primary" type="submit">Envoyer</button>
-            <span id="forum-user" class="muted">Connecte-toi pour participer</span>
+            <button id="forum-submit" class="btn primary" type="submit" disabled>Envoyer</button>
+            <span id="forum-user" class="muted">Forum verrouille (en travaux)</span>
           </div>
         </form>
         <div id="forum-list" class="comments-list"></div>

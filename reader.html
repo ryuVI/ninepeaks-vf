@@ -56,11 +56,11 @@
         <h2 id="comments-title">Commentaires</h2>
         <span id="comments-count" class="muted">0 commentaire</span>
       </div>
-      <form id="comment-form" class="comment-form" novalidate>
-        <textarea id="comment-input" class="input-textarea" placeholder="Ecris ton commentaire..." maxlength="800"></textarea>
+      <form id="comment-form" class="comment-form form-locked" novalidate aria-disabled="true">
+        <textarea id="comment-input" class="input-textarea" placeholder="Commentaires en travaux" maxlength="800" disabled readonly></textarea>
         <div class="comment-actions">
-          <button id="comment-submit" class="btn primary" type="submit">Publier</button>
-          <span id="comment-user" class="muted">Connecte-toi pour commenter</span>
+          <button id="comment-submit" class="btn primary" type="submit" disabled>Publier</button>
+          <span id="comment-user" class="muted">Commentaires verrouilles (en travaux)</span>
         </div>
       </form>
       <div id="comments-list" class="comments-list"></div>

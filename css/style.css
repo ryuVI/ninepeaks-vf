@@ -654,6 +654,16 @@ body.ui-forced-hidden .reader-side-dock .ui-toggle-btn .dock-text {
   gap: 0.55rem;
 }
 
+.form-locked {
+  pointer-events: none;
+  opacity: 0.65;
+  user-select: none;
+}
+
+.form-locked .input-textarea {
+  filter: grayscale(0.2);
+}
+
 .comment-actions {
   display: flex;
   justify-content: space-between;

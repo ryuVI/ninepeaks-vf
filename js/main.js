@@ -897,7 +897,10 @@ function setupComments(chapterNumber) {
   if (!formEl || !inputEl || !submitEl || !userEl) return;
 
   if (COMMENTS_MAINTENANCE_MODE) {
+    formEl.classList.add('form-locked');
+    formEl.setAttribute('aria-disabled', 'true');
     inputEl.disabled = true;
+    inputEl.readOnly = true;
     inputEl.placeholder = 'Commentaires temporairement indisponibles';
     submitEl.disabled = true;
     userEl.textContent = 'Publication indisponible (en travaux)';
@@ -1044,7 +1047,10 @@ async function setupForum() {
   if (forumSection) forumSection.classList.remove('hidden');
 
   if (FORUM_MAINTENANCE_MODE) {
+    formEl.classList.add('form-locked');
+    formEl.setAttribute('aria-disabled', 'true');
     inputEl.disabled = true;
+    inputEl.readOnly = true;
     inputEl.placeholder = 'Forum temporairement indisponible';
     submitEl.disabled = true;
     userEl.textContent = 'Publication indisponible (en travaux)';
