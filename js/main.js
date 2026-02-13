@@ -145,7 +145,21 @@ function setChapterComments(chapterNumber, comments) {
 }
 
 function readForumMessages() {
-  if (backendReady) return forumCache;
+  const localMessages = readForumMessagesLocal();
+  if (backendReady) {
+    const mergedMap = new Map();
+    forumCache.forEach((item) => {
+      if (item && item.id) mergedMap.set(item.id, item);
+    });
+    localMessages.forEach((item) => {
+      if (item && item.id && !mergedMap.has(item.id)) mergedMap.set(item.id, item);
+    });
+    return Array.from(mergedMap.values());
+  }
+  return localMessages;
+}
+
+function readForumMessagesLocal() {
   try {
     const raw = localStorage.getItem(FORUM_KEY);
     if (!raw) return [];
@@ -158,8 +172,11 @@ function readForumMessages() {
 
 function saveForumMessages(messages) {
   forumCache = messages;
-  if (backendReady) return;
-  localStorage.setItem(FORUM_KEY, JSON.stringify(messages));
+  try {
+    localStorage.setItem(FORUM_KEY, JSON.stringify(messages));
+  } catch {
+    // ignore localStorage failures
+  }
 }
 
 function getForumCooldownKey(username) {
@@ -875,6 +892,7 @@ async function renderForum() {
   const emptyEl = document.querySelector('#forum-empty');
   if (!listEl || !emptyEl) return;
 
+  await ensureBackendReady();
   if (backendReady) {
     await loadRemoteForum();
   }
@@ -945,13 +963,14 @@ function startForumAutoRefresh() {
   });
 }
 
-function setupForum() {
+async function setupForum() {
   const formEl = document.querySelector('#forum-form');
   const inputEl = document.querySelector('#forum-input');
   const submitEl = document.querySelector('#forum-submit');
   const userEl = document.querySelector('#forum-user');
   if (!formEl || !inputEl || !submitEl || !userEl) return;
 
+  await ensureBackendReady();
   const user = getCurrentUserSafe();
   const forumSection = document.querySelector('#forum-heading')?.closest('.chapter-section');
   if (!user) {
@@ -981,6 +1000,9 @@ function setupForum() {
       inputEl.value = '';
       userEl.textContent = `Connecte: ${user.username}`;
       showToast('Message forum envoye', 'success');
+      const localCopy = readForumMessagesLocal();
+      localCopy.push(posted.row);
+      saveForumMessages(localCopy);
       await renderForum();
       return;
     }
@@ -1350,7 +1372,7 @@ async function initIndexPage() {
     renderChapterMenu(chaptersCache);
     setupChapterSearch(chaptersCache);
     renderBookmarks(chaptersCache);
-    setupForum();
+    await setupForum();
   } catch (error) {
     console.error('[debug] Erreur index:', error);
     showIndexError('Impossible de charger les chapitres. Verifie data/chapters.json');
