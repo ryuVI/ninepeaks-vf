@@ -432,6 +432,26 @@ body.ui-forced-hidden #reader-header {
   pointer-events: none;
 }
 
+body.ui-forced-hidden .floating-nav {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.ui-forced-hidden .reader-side-dock .dock-main {
+  display: none;
+}
+
+body.ui-forced-hidden .reader-side-dock .ui-toggle-btn {
+  min-width: 46px;
+  justify-content: center;
+  padding: 0.55rem;
+}
+
+body.ui-forced-hidden .reader-side-dock .ui-toggle-btn .dock-text {
+  display: none;
+}
+
 .reader-topbar {
   min-height: 74px;
   display: grid;
@@ -630,6 +650,10 @@ body.ui-forced-hidden #reader-header {
   z-index: 46;
   display: grid;
   gap: 0.55rem;
+}
+
+.ui-toggle-btn {
+  order: -1;
 }
 
 .dock-btn {
@@ -1042,6 +1066,18 @@ body.ui-forced-hidden #reader-header {
 @media (min-width: 980px) {
   .chapter-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reader-side-dock {
+    left: auto;
+    right: 1rem;
+    top: 1rem;
+    bottom: auto;
+    align-items: flex-end;
+  }
+
+  .dock-hint {
+    text-align: right;
   }
 }
 
